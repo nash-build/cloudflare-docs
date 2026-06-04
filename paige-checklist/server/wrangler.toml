@@ -11,3 +11,15 @@ kv_namespaces = [
 # Set the shared secret (do NOT commit it):
 #   npx wrangler secret put PAIGE_TOKEN
 # vars left empty on purpose; PAIGE_TOKEN comes from `wrangler secret put`.
+
+# --- Screenshot reading (Paige's read_screenshot tool) ------------------------
+# Optional. Lets Paige read screenshots from Google Drive via Claude vision.
+# Set these as secrets (not committed):
+#   npx wrangler secret put GDRIVE_CLIENT_ID
+#   npx wrangler secret put GDRIVE_CLIENT_SECRET
+#   npx wrangler secret put GDRIVE_REFRESH_TOKEN
+#   npx wrangler secret put ANTHROPIC_API_KEY
+# Non-secret settings go in [vars]:
+[vars]
+# GDRIVE_FOLDER_ID = "your-screenshots-folder-id"   # restrict search to one folder
+# CLAUDE_VISION_MODEL = "claude-sonnet-4-6"          # override the vision model

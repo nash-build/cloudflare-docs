@@ -11,6 +11,7 @@
 //   GET  /  /manifest.webmanifest /sw.js  -> mobile PWA    (public)
 
 import { MOBILE_HTML, MANIFEST_JSON, SERVICE_WORKER_JS } from './mobile.js';
+import { readScreenshot } from './screenshot.js';
 
 const KEY = 'checklist';
 
@@ -116,6 +117,17 @@ export default {
       state.version = Date.now();
       await save(env, state);
       return json({ ok: true, item, version: state.version });
+    }
+
+    // Read a screenshot from Google Drive and describe it (Claude vision).
+    if (path === '/screenshot' && request.method === 'GET') {
+      const query = url.searchParams.get('query') || url.searchParams.get('name') || '';
+      try {
+        const result = await readScreenshot(env, query);
+        return json(result, result.error ? result.status || 500 : 200);
+      } catch (err) {
+        return json({ error: String((err && err.message) || err) }, 502);
+      }
     }
 
     return json({ error: 'not found' }, 404);

@@ -322,6 +322,23 @@ const clientTools = {
       .map((i) => `${i.text} — ${formatWhen(i.remindAt)}`)
       .join('\n');
   },
+  // Find a screenshot in Google Drive by name/keyword and describe it.
+  // Reads via the sync backend, which holds the Drive + Claude credentials.
+  read_screenshot: async ({ query }) => {
+    if (!syncCfg) return 'Screenshot reading needs the sync backend configured in config.json.';
+    try {
+      const res = await fetch(
+        syncCfg.url.replace(/\/+$/, '') + '/screenshot?query=' + encodeURIComponent(query || ''),
+        { headers: syncHeaders() }
+      );
+      const r = await res.json().catch(() => ({}));
+      return res.ok && r.description
+        ? `${r.name}: ${r.description}`
+        : (r.error || "I couldn't read the screenshot.");
+    } catch (err) {
+      return "I couldn't reach the screenshot reader.";
+    }
+  },
   // Send a push notification to the user's iPhone right now.
   notify_phone: async ({ message }) => {
     const body = (message || '').trim();

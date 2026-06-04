@@ -233,6 +233,15 @@ const tools = {
     const p = (s.items || []).filter(i => i.remindAt && !i.done);
     return p.length ? p.map(i => i.text + ' — ' + fmtWhen(i.remindAt)).join(', ') : 'You have no reminders set';
   },
+  // Find a screenshot in Google Drive by name/keyword and describe it.
+  read_screenshot: async ({ query }) => {
+    try {
+      const r = await api('/screenshot?query=' + encodeURIComponent(query || ''));
+      return r.description ? r.name + ': ' + r.description : (r.error || "I couldn't read it.");
+    } catch (e) {
+      return "I couldn't reach the screenshot reader.";
+    }
+  },
   // On the phone, "notify_phone" surfaces a local notification on this device.
   notify_phone: async ({ message }) => {
     const body = (message || '').trim(); if (!body) return 'What should I send?';

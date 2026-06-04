@@ -64,6 +64,7 @@ npm start
    | `clear_reminder`  | `text` (string)                     | Removes the reminder from an item         |
    | `list_reminders`  | _(none)_                            | Reads back all pending reminders          |
    | `notify_phone`    | `message` (string)                  | Sends a push notification to your iPhone  |
+   | `read_screenshot` | `query` (string)                    | Finds a screenshot in Google Drive by name and describes it (Claude vision) |
 
    Mark them as **blocking** (await response) so Paige can confirm results.
 3. Suggested agent system prompt:
@@ -73,7 +74,10 @@ npm start
    > relative times ("in half an hour" → 30); for clock/calendar times, compute
    > an absolute ISO 8601 datetime in the user's local timezone and pass it as
    > `when`. Use `notify_phone` to send a message to the user's iPhone on
-   > request. Confirm briefly. Don't read the whole list unless asked.
+   > request. When the user asks about a screenshot, call `read_screenshot` with
+   > a keyword from its name, describe what it shows in one or two sentences,
+   > then ask if they'd like a reminder to tackle it — if yes, call
+   > `set_reminder`. Confirm briefly. Don't read the whole list unless asked.
 4. Copy the agent's **Agent ID** into `config.json` as `agentId`.
    - If your agent is **public**, `agentId` alone works.
    - If it's **private**, you'll need to mint a signed URL server-side and pass
@@ -105,6 +109,37 @@ both are free or cheap and need **no Apple Developer account**:
 Test it: start the app, set a reminder one minute out (*"Paige, remind me to test in
 1 minute"*), or just say *"Paige, text my phone that it works."* Omit the `push`
 block entirely to turn phone notifications off.
+
+### Screenshot reading (Google Drive + Claude vision)
+
+Paige can read screenshots your screenshot tool saves to Google Drive: she finds
+one by name, describes it, and offers to set a reminder to tackle it. This runs
+on the Worker, which holds the credentials.
+
+1. **Google Drive OAuth** — in [Google Cloud Console](https://console.cloud.google.com/):
+   enable the **Drive API**, create an **OAuth client (Desktop)**, and get a
+   **refresh token** with the `drive.readonly` scope (the
+   [OAuth Playground](https://developers.google.com/oauthplayground/) is the
+   quickest way — authorize *Drive API v3 → drive.readonly*, exchange for a
+   refresh token).
+2. **Find your screenshots folder ID** — open the folder in Drive; the ID is the
+   last path segment of the URL.
+3. **Set the Worker secrets/vars:**
+   ```bash
+   cd server
+   npx wrangler secret put GDRIVE_CLIENT_ID
+   npx wrangler secret put GDRIVE_CLIENT_SECRET
+   npx wrangler secret put GDRIVE_REFRESH_TOKEN
+   npx wrangler secret put ANTHROPIC_API_KEY
+   # then set GDRIVE_FOLDER_ID (and optional CLAUDE_VISION_MODEL) under [vars] in wrangler.toml
+   npm run deploy
+   ```
+4. Ask Paige: *"What's on the screenshot called invoice?"* → she finds the newest
+   match, describes it, and asks if you want a reminder.
+
+Notes: the vision model defaults to `claude-sonnet-4-6` (override with
+`CLAUDE_VISION_MODEL`). Very large screenshots may exceed Claude's per-image
+size limit; the tool reports an error string Paige will read back if so.
 
 ### Usage
 

@@ -106,10 +106,12 @@ const API = location.origin;
 const $ = (id) => document.getElementById(id);
 const listEl = $('list'), hint = $('hint'), ptt = $('ptt');
 
+const DEFAULT_AGENT_ID = 'agent_4001kt8kbv73ecwbany87c29nc60'; // Paige
+
 const cfg = {
   get token() { return localStorage.getItem('paige_token') || ''; },
   set token(v) { localStorage.setItem('paige_token', v); },
-  get agentId() { return localStorage.getItem('paige_agent') || ''; },
+  get agentId() { return localStorage.getItem('paige_agent') || DEFAULT_AGENT_ID; },
   set agentId(v) { localStorage.setItem('paige_agent', v); },
 };
 

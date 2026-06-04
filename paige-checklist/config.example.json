@@ -1,5 +1,5 @@
 {
-  "agentId": "YOUR_ELEVENLABS_AGENT_ID",
+  "agentId": "agent_4001kt8kbv73ecwbany87c29nc60",
   "wakeWord": true,
   "picovoice": {
     "accessKey": "",

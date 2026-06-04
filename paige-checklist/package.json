@@ -1,14 +1,44 @@
 {
   "name": "paige-checklist",
   "version": "1.0.0",
-  "description": "Always-on-top, top-right checklist overlay for macOS with the 'Paige' ElevenLabs voice agent (read/write via voice).",
+  "description": "Always-on-top, top-right checklist overlay for macOS with the 'Paige' ElevenLabs voice agent (read/write + reminders + iPhone push).",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "icons": "node assets/make-icons.js",
+    "dist": "electron-builder --mac",
+    "pack": "electron-builder --dir"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^31.0.0"
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.paige.checklist",
+    "productName": "Paige Checklist",
+    "icon": "assets/icon.png",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/trayTemplate.png",
+      "assets/trayTemplate@2x.png"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ],
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Paige uses the microphone to hear the wake word and your voice commands.",
+        "LSUIElement": false
+      }
+    },
+    "dmg": {
+      "title": "Paige Checklist"
+    }
   }
 }

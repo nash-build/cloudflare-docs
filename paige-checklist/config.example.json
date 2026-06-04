@@ -1,6 +1,12 @@
 {
   "agentId": "YOUR_ELEVENLABS_AGENT_ID",
   "wakeWord": true,
+  "picovoice": {
+    "accessKey": "",
+    "keywordPath": "Paige.ppn",
+    "modelPath": "porcupine_params.pv",
+    "sensitivity": 0.6
+  },
   "push": {
     "provider": "ntfy",
     "ntfyTopic": "paige-checklist-CHANGE-ME-to-something-secret",
@@ -9,5 +15,5 @@
     "pushoverToken": "",
     "pushoverUser": ""
   },
-  "_comment": "Copy to config.json and fill in. iPhone push: install the ntfy app, subscribe to your ntfyTopic (treat it like a password). To use Pushover instead, set provider to 'pushover' and fill pushoverToken/pushoverUser. Leave the push block out entirely to disable phone notifications. Set wakeWord to false to disable always-listening."
+  "_comment": "Copy to config.json. WAKE WORD: leave picovoice.accessKey blank to use the built-in browser speech fallback; fill it (plus place Paige.ppn and porcupine_params.pv next to index.html) to use the robust Picovoice 'Paige' wake word. IPHONE PUSH: install the ntfy app and subscribe to ntfyTopic (treat it like a password), or set provider to 'pushover'. Remove the push block to disable phone notifications. Set wakeWord to false to disable always-listening entirely."
 }

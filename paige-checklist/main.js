@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, globalShortcut } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -123,6 +123,8 @@ const WIN_HEIGHT = 520;
 const MARGIN = 16;
 
 let win = null;
+let tray = null;
+let isQuiting = false;
 
 function positionTopRight(targetWindow) {
   const { workArea } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
@@ -169,6 +171,65 @@ function createWindow() {
 
   // Re-pin to top-right if the display configuration changes.
   screen.on('display-metrics-changed', () => win && positionTopRight(win));
+
+  // Closing hides to the tray instead of quitting (real quit is in the menu).
+  win.on('close', (e) => {
+    if (!isQuiting) {
+      e.preventDefault();
+      win.hide();
+    }
+  });
+}
+
+function toggleWindow() {
+  if (!win) return createWindow();
+  if (win.isVisible()) {
+    win.hide();
+  } else {
+    positionTopRight(win);
+    win.show();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Menu-bar tray: the always-running control surface for the overlay.
+// ---------------------------------------------------------------------------
+function buildTrayMenu() {
+  const openAtLogin = app.getLoginItemSettings().openAtLogin;
+  return Menu.buildFromTemplate([
+    { label: win && win.isVisible() ? 'Hide checklist' : 'Show checklist', click: toggleWindow },
+    {
+      label: 'Talk to Paige',
+      accelerator: 'CommandOrControl+Shift+P',
+      click: () => win && win.webContents.send('paige:toggle'),
+    },
+    { type: 'separator' },
+    {
+      label: 'Launch at login',
+      type: 'checkbox',
+      checked: openAtLogin,
+      click: (item) => {
+        app.setLoginItemSettings({ openAtLogin: item.checked, openAsHidden: true });
+        refreshTrayMenu();
+      },
+    },
+    { type: 'separator' },
+    { label: 'Quit Paige Checklist', click: () => { isQuiting = true; app.quit(); } },
+  ]);
+}
+
+function refreshTrayMenu() {
+  if (tray) tray.setContextMenu(buildTrayMenu());
+}
+
+function createTray() {
+  const iconPath = path.join(__dirname, 'assets', 'trayTemplate.png');
+  let image = nativeImage.createFromPath(iconPath);
+  image.setTemplateImage(true); // macOS auto-recolors for light/dark menu bar
+  tray = new Tray(image);
+  tray.setToolTip('Paige Checklist');
+  tray.on('click', () => { toggleWindow(); refreshTrayMenu(); });
+  refreshTrayMenu();
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +239,7 @@ ipcMain.handle('checklist:load', () => loadItems());
 ipcMain.handle('checklist:save', (_evt, items) => saveItems(items));
 ipcMain.handle('config:get', () => loadConfig());
 ipcMain.handle('push:send', (_evt, payload) => sendPush(payload));
-ipcMain.on('window:close', () => app.quit());
+ipcMain.on('window:close', () => win && win.hide()); // ✕ hides to the tray
 ipcMain.on('window:alert', () => {
   if (!win) return;
   // Pull the overlay to the very front and bounce the Dock for a reminder.
@@ -190,6 +251,7 @@ ipcMain.on('window:alert', () => {
 
 app.whenReady().then(() => {
   createWindow();
+  createTray();
 
   // Global hotkey fallback to start/stop Paige without the wake word
   // (handy in Electron where browser speech recognition can be flaky).
@@ -198,9 +260,12 @@ app.whenReady().then(() => {
   });
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (win) { win.show(); positionTopRight(win); }
+    else createWindow();
   });
 });
 
-app.on('window-all-closed', () => app.quit());
+// Keep running in the menu bar after the window is closed/hidden.
+app.on('window-all-closed', () => { /* tray app: stay alive */ });
+app.on('before-quit', () => { isQuiting = true; });
 app.on('will-quit', () => globalShortcut.unregisterAll());

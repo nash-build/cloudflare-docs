@@ -344,11 +344,50 @@ window.api.onPaigeToggle(togglePaige); // global hotkey ⌘⇧P from main proces
 
 // ===========================================================================
 // Wake word: "Paige"
-// Uses the browser SpeechRecognition API to listen continuously for the name.
-// When heard, it opens the Paige conversation. (See README for the more robust
-// Picovoice Porcupine option if SpeechRecognition is unreliable in Electron.)
+// Two engines:
+//   1. Picovoice Porcupine (robust, offline) — used when config.picovoice is set.
+//   2. Browser SpeechRecognition (zero-setup fallback).
 // ===========================================================================
+let porcupine = null;
+
 function startWakeWord() {
+  const pv = config.picovoice || {};
+  if (pv.accessKey && pv.keywordPath && pv.modelPath) {
+    startPorcupine(pv);
+  } else {
+    startWebSpeechWakeWord();
+  }
+}
+
+async function startPorcupine(pv) {
+  try {
+    setStatus('Loading the “Paige” wake-word engine…');
+    const [{ PorcupineWorker }, { WebVoiceProcessor }] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/@picovoice/porcupine-web/+esm'),
+      import('https://cdn.jsdelivr.net/npm/@picovoice/web-voice-processor/+esm'),
+    ]);
+    porcupine = await PorcupineWorker.create(
+      pv.accessKey,
+      { label: 'Paige', publicPath: pv.keywordPath, sensitivity: pv.sensitivity ?? 0.6 },
+      () => {
+        if (!conversation) {
+          paigeDot.className = 'dot listening';
+          startPaige();
+        }
+      },
+      { publicPath: pv.modelPath }
+    );
+    await WebVoiceProcessor.subscribe(porcupine);
+    paigeDot.className = 'dot listening';
+    setStatus('Listening for “Paige”…');
+  } catch (err) {
+    console.error('Porcupine failed:', err);
+    setStatus('Wake-word engine failed — using fallback. Use 🎙️ / ⌘⇧P.');
+    startWebSpeechWakeWord();
+  }
+}
+
+function startWebSpeechWakeWord() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     setStatus('Wake word unavailable here — use 🎙️ or ⌘⇧P to talk to Paige.');

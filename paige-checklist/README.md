@@ -26,6 +26,8 @@ her name.
   a notification is sent to your iPhone via [ntfy](https://ntfy.sh) or
   [Pushover](https://pushover.net).
 - Say **"Paige"** to start talking, or click 🎙️ / press **⌘⇧P**.
+- Lives in the **menu bar** (tray icon) and can **launch at login**, so it's
+  always running and reminders fire even after a restart.
 
 ## Requirements
 
@@ -112,18 +114,57 @@ block entirely to turn phone notifications off.
 - Or type in the input box / click the checkbox to toggle, 🗑 to delete.
 - **⌘⇧P** toggles Paige without the wake word.
 
-## Wake-word notes
+### Menu bar & launch at login
 
-The default wake word uses the browser **SpeechRecognition** API. In Electron
-this can be unreliable (it depends on the embedded Chromium's speech backend).
-If "Paige" isn't being detected:
+The app runs as a **menu-bar (tray) app**. Click the tray icon to show/hide the
+overlay; the tray menu has **Show/Hide checklist**, **Talk to Paige**, a
+**Launch at login** checkbox, and **Quit**. Closing the window (✕) just hides it
+to the tray — use **Quit** to fully exit. Enabling *Launch at login* makes it
+start (hidden) when you log in, so reminders keep working after a reboot.
 
-- Use the 🎙️ button or **⌘⇧P** — these always work.
-- Or set `"wakeWord": false` in `config.json` to disable always-listening.
-- For a robust offline wake word, integrate
-  [Picovoice Porcupine](https://picovoice.ai/platform/porcupine/) with a custom
-  "Paige" keyword (`.ppn`) — drop-in point is `startWakeWord()` in
-  `renderer/renderer.js`.
+## Build a double-clickable app (no terminal)
+
+To get a normal `.app` / `.dmg` you can launch from Finder:
+
+```bash
+npm install
+npm run dist      # builds a .dmg + .zip into dist/ (run this ON your Mac)
+```
+
+This uses **electron-builder** (config is in `package.json`) and generates the
+`.icns` from `assets/icon.png`. Open the `.dmg` in `dist/` and drag **Paige
+Checklist** to Applications. Because the app isn't code-signed/notarized, the
+first launch needs **right-click → Open** (or *System Settings → Privacy &
+Security → Open Anyway*). To distribute it more widely you'd add an Apple
+Developer ID and notarization — see electron-builder's macOS signing docs.
+
+> Note: `npm run dist` must run **on macOS** to produce a Mac app; it can't be
+> cross-built from Linux/Windows.
+
+## Wake-word options
+
+**Default — browser SpeechRecognition** (zero setup). In Electron this can be
+unreliable (it depends on the embedded Chromium speech backend). If "Paige"
+isn't detected, the 🎙️ button and **⌘⇧P** always work, or set
+`"wakeWord": false` to disable always-listening.
+
+**Robust — Picovoice Porcupine** (offline, reliable). To use a real "Paige"
+wake word:
+
+1. Create a free account at the [Picovoice Console](https://console.picovoice.ai/)
+   and copy your **AccessKey**.
+2. In the console, train a custom **wake word "Paige"** for **Web (WASM)** and
+   download the `Paige.ppn` file.
+3. Download the English model `porcupine_params.pv` (Picovoice provides it for
+   the Web SDK).
+4. Put **both files in `renderer/`** (next to `index.html`), and fill the
+   `picovoice` block in `config.json`:
+   ```json
+   "picovoice": { "accessKey": "YOUR_KEY", "keywordPath": "Paige.ppn", "modelPath": "porcupine_params.pv", "sensitivity": 0.6 }
+   ```
+The app auto-detects this and uses Porcupine; otherwise it falls back to the
+browser engine. (When packaging, the `.ppn`/`.pv` files in `renderer/` are
+bundled automatically via the `renderer/**/*` glob.)
 
 ## What this app can't do
 

@@ -1,5 +1,13 @@
 {
   "agentId": "YOUR_ELEVENLABS_AGENT_ID",
   "wakeWord": true,
-  "_comment": "Copy this file to config.json and fill in your ElevenLabs agent id. Set wakeWord to false to disable always-listening and use the mic button / Cmd+Shift+P instead."
+  "push": {
+    "provider": "ntfy",
+    "ntfyTopic": "paige-checklist-CHANGE-ME-to-something-secret",
+    "ntfyServer": "https://ntfy.sh",
+    "ntfyToken": "",
+    "pushoverToken": "",
+    "pushoverUser": ""
+  },
+  "_comment": "Copy to config.json and fill in. iPhone push: install the ntfy app, subscribe to your ntfyTopic (treat it like a password). To use Pushover instead, set provider to 'pushover' and fill pushoverToken/pushoverUser. Leave the push block out entirely to disable phone notifications. Set wakeWord to false to disable always-listening."
 }

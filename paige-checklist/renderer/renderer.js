@@ -174,7 +174,9 @@ function fireReminder(item) {
   } catch (err) {
     console.error('Notification failed:', err);
   }
-  if (config.agentId) setStatus(`Reminder: ${item.text}`);
+  // Also push to the iPhone (no-ops if push isn't configured).
+  window.api.pushPhone({ title: 'Reminder', body: item.text });
+  setStatus(`Reminder: ${item.text}`);
 }
 
 function startScheduler() {
@@ -275,6 +277,15 @@ const clientTools = {
     return pending
       .map((i) => `${i.text} — ${formatWhen(i.remindAt)}`)
       .join('\n');
+  },
+  // Send a push notification to the user's iPhone right now.
+  notify_phone: async ({ message }) => {
+    const body = (message || '').trim();
+    if (!body) return 'What should I send to your phone?';
+    const res = await window.api.pushPhone({ title: 'Paige', body });
+    return res && res.ok
+      ? 'Sent that to your phone.'
+      : `I couldn't send it${res && res.reason ? ` (${res.reason})` : ''}. Check the push settings in config.json.`;
   },
 };
 

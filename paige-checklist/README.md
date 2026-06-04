@@ -22,6 +22,9 @@ her name.
   read and write the checklist *and* set reminders on items.
 - **Reminders** fire native macOS notifications, bounce the Dock, and highlight
   the item in the overlay at the scheduled time.
+- **iPhone push** — when a reminder fires (or you ask Paige to "text my phone"),
+  a notification is sent to your iPhone via [ntfy](https://ntfy.sh) or
+  [Pushover](https://pushover.net).
 - Say **"Paige"** to start talking, or click 🎙️ / press **⌘⇧P**.
 
 ## Requirements
@@ -55,6 +58,7 @@ npm start
    | `set_reminder`    | `text` (string), `in_minutes` (number) **or** `when` (ISO 8601 string) | Schedules a reminder on an item (creates it if new) |
    | `clear_reminder`  | `text` (string)                     | Removes the reminder from an item         |
    | `list_reminders`  | _(none)_                            | Reads back all pending reminders          |
+   | `notify_phone`    | `message` (string)                  | Sends a push notification to your iPhone  |
 
    Mark them as **blocking** (await response) so Paige can confirm results.
 3. Suggested agent system prompt:
@@ -63,11 +67,39 @@ npm start
    > client tool. To set reminders, call `set_reminder`: prefer `in_minutes` for
    > relative times ("in half an hour" → 30); for clock/calendar times, compute
    > an absolute ISO 8601 datetime in the user's local timezone and pass it as
-   > `when`. Confirm briefly. Don't read the whole list unless asked.
+   > `when`. Use `notify_phone` to send a message to the user's iPhone on
+   > request. Confirm briefly. Don't read the whole list unless asked.
 4. Copy the agent's **Agent ID** into `config.json` as `agentId`.
    - If your agent is **public**, `agentId` alone works.
    - If it's **private**, you'll need to mint a signed URL server-side and pass
      it as `signedUrl` in `renderer.js` (see the comment in `startPaige`).
+
+### iPhone push notifications
+
+Reminders (and Paige's `notify_phone` tool) can ping your iPhone. Two options —
+both are free or cheap and need **no Apple Developer account**:
+
+**Option A — ntfy (free, recommended)**
+1. Install the **ntfy** app on your iPhone (App Store).
+2. Pick a **topic** name that is long and unguessable — it acts like a password,
+   since anyone who knows it can post to it. e.g. `paige-7f3k9q2x`.
+3. In the app, tap **+** and subscribe to that topic.
+4. Put it in `config.json` under `push`:
+   ```json
+   "push": { "provider": "ntfy", "ntfyTopic": "paige-7f3k9q2x", "ntfyServer": "https://ntfy.sh" }
+   ```
+   (Self-hosting ntfy? Set `ntfyServer` to your URL and `ntfyToken` if it needs auth.)
+
+**Option B — Pushover (one-time purchase, very reliable)**
+1. Install **Pushover** on your iPhone and create an [application token](https://pushover.net/apps/build).
+2. Set in `config.json`:
+   ```json
+   "push": { "provider": "pushover", "pushoverToken": "APP_TOKEN", "pushoverUser": "USER_KEY" }
+   ```
+
+Test it: start the app, set a reminder one minute out (*"Paige, remind me to test in
+1 minute"*), or just say *"Paige, text my phone that it works."* Omit the `push`
+block entirely to turn phone notifications off.
 
 ### Usage
 

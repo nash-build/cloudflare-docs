@@ -3,6 +3,8 @@
 const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const https = require('https');
 
 // ---------------------------------------------------------------------------
 // Persistence: the checklist lives in a JSON file in the OS user-data folder
@@ -47,6 +49,73 @@ function loadConfig() {
     }
   }
   return {};
+}
+
+// ---------------------------------------------------------------------------
+// iPhone push: posts to a push service that has an iOS app (ntfy or Pushover).
+// Runs in the main process so there are no browser CORS limits. Configure the
+// "push" block in config.json. Quietly no-ops if push isn't configured.
+// ---------------------------------------------------------------------------
+function httpPost(urlStr, { headers = {}, body = '' } = {}) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(urlStr);
+    const lib = u.protocol === 'http:' ? http : https;
+    const payload = Buffer.from(body, 'utf8');
+    const req = lib.request(
+      {
+        hostname: u.hostname,
+        port: u.port || (u.protocol === 'http:' ? 80 : 443),
+        path: u.pathname + u.search,
+        method: 'POST',
+        headers: { ...headers, 'Content-Length': payload.length },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () => resolve({ status: res.statusCode, data }));
+      }
+    );
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+async function sendPush({ title = 'Reminder', body = '' } = {}) {
+  const cfg = loadConfig();
+  const p = cfg.push || {};
+  try {
+    if (p.provider === 'pushover') {
+      if (!p.pushoverToken || !p.pushoverUser) return { ok: false, reason: 'missing pushover creds' };
+      const form = new URLSearchParams({
+        token: p.pushoverToken,
+        user: p.pushoverUser,
+        title,
+        message: body,
+        priority: '1',
+      }).toString();
+      const r = await httpPost('https://api.pushover.net/1/messages.json', {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: form,
+      });
+      return { ok: r.status >= 200 && r.status < 300, status: r.status };
+    }
+    // default: ntfy
+    if (!p.ntfyTopic) return { ok: false, reason: 'no ntfyTopic configured' };
+    const server = (p.ntfyServer || 'https://ntfy.sh').replace(/\/+$/, '');
+    // ntfy reads metadata from headers; header values must be latin-1 safe, so
+    // keep Title ASCII and let the (UTF-8) body carry the task text.
+    const headers = { Title: title, Priority: 'high', Tags: 'alarm_clock' };
+    if (p.ntfyToken) headers.Authorization = `Bearer ${p.ntfyToken}`;
+    const r = await httpPost(`${server}/${encodeURIComponent(p.ntfyTopic)}`, {
+      headers,
+      body,
+    });
+    return { ok: r.status >= 200 && r.status < 300, status: r.status };
+  } catch (err) {
+    console.error('Push failed:', err);
+    return { ok: false, reason: String(err) };
+  }
 }
 
 const WIN_WIDTH = 340;
@@ -108,6 +177,7 @@ function createWindow() {
 ipcMain.handle('checklist:load', () => loadItems());
 ipcMain.handle('checklist:save', (_evt, items) => saveItems(items));
 ipcMain.handle('config:get', () => loadConfig());
+ipcMain.handle('push:send', (_evt, payload) => sendPush(payload));
 ipcMain.on('window:close', () => app.quit());
 ipcMain.on('window:alert', () => {
   if (!win) return;

@@ -1,0 +1,5 @@
+{
+  "agentId": "YOUR_ELEVENLABS_AGENT_ID",
+  "wakeWord": true,
+  "_comment": "Copy this file to config.json and fill in your ElevenLabs agent id. Set wakeWord to false to disable always-listening and use the mic button / Cmd+Shift+P instead."
+}

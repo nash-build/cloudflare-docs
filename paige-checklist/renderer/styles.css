@@ -1,0 +1,171 @@
+:root {
+  --bg: rgba(22, 24, 29, 0.92);
+  --bg-elevated: rgba(255, 255, 255, 0.06);
+  --text: #f2f3f5;
+  --muted: #9aa0a6;
+  --accent: #7c9cff;
+  --done: #5f6571;
+  --danger: #ff6b6b;
+  --radius: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* Draggable title bar (Electron frameless drag region) */
+.titlebar {
+  -webkit-app-region: drag;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+
+.dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--done);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.dot.listening { background: #ffd166; box-shadow: 0 0 8px #ffd166; }
+.dot.active { background: #4ade80; box-shadow: 0 0 10px #4ade80; animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+.titlebar-actions { -webkit-app-region: no-drag; display: flex; gap: 4px; }
+
+.icon-btn {
+  -webkit-app-region: no-drag;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+.icon-btn:hover { background: var(--bg-elevated); color: var(--text); }
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.item:hover { background: var(--bg-elevated); }
+
+.checkbox {
+  flex: 0 0 auto;
+  width: 18px; height: 18px;
+  border: 2px solid var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.checkbox:hover { border-color: var(--accent); }
+
+.item-label {
+  flex: 1;
+  position: relative;
+  line-height: 1.3;
+}
+
+/* Strike-through animation when an item is completed */
+.item-label::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 50%;
+  height: 2px;
+  width: 0;
+  background: var(--done);
+  transition: width 0.35s ease;
+}
+.item.done .item-label { color: var(--done); }
+.item.done .item-label::after { width: 100%; }
+.item.done .checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.item.done .checkbox::after { content: "✓"; color: #fff; font-size: 12px; }
+
+.delete-btn {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+}
+.item:hover .delete-btn { color: var(--muted); }
+.delete-btn:hover { color: var(--danger); }
+
+.add-form { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+#add-input {
+  flex: 1;
+  background: var(--bg-elevated);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+}
+#add-input:focus { border-color: var(--accent); }
+.add-btn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  border-radius: 9px;
+  width: 34px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.status {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 12px; }

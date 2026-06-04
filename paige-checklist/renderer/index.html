@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; connect-src https: wss:; img-src 'self' data:; media-src 'self' blob:;" />
+    <title>Paige Checklist</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="card">
+      <header class="titlebar">
+        <div class="title">
+          <span class="dot" id="paige-dot" title="Paige status"></span>
+          <span>Checklist</span>
+        </div>
+        <div class="titlebar-actions">
+          <button id="mic-btn" class="icon-btn" title="Toggle Paige (⌘⇧P) — or say &quot;Paige&quot;">🎙️</button>
+          <button id="close-btn" class="icon-btn" title="Quit">✕</button>
+        </div>
+      </header>
+
+      <ul id="list" class="list"></ul>
+
+      <form id="add-form" class="add-form">
+        <input id="add-input" type="text" placeholder="Add an item…" autocomplete="off" />
+        <button type="submit" class="add-btn">＋</button>
+      </form>
+
+      <footer class="status">
+        <span id="status-text">Say “Paige” or press 🎙️ to talk.</span>
+      </footer>
+    </div>
+
+    <script type="module" src="renderer.js"></script>
+  </body>
+</html>

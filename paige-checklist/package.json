@@ -1,0 +1,14 @@
+{
+  "name": "paige-checklist",
+  "version": "1.0.0",
+  "description": "Always-on-top, top-right checklist overlay for macOS with the 'Paige' ElevenLabs voice agent (read/write via voice).",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

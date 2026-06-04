@@ -51,6 +51,7 @@ export const MOBILE_HTML = `<!doctype html>
   .item.done .box::after { content:"✓"; color:#fff; font-size:14px; }
   .label { flex:1; font-size:16px; }
   .item.done .label { color:var(--done); text-decoration:line-through; }
+  .rem { flex:0 0 auto; font-size:11px; color:var(--accent); background:rgba(124,156,255,.14); border-radius:6px; padding:3px 7px; white-space:nowrap; }
   .empty { color:var(--muted); text-align:center; padding:30px; }
   .talk { margin-top:10px; display:flex; flex-direction:column; align-items:center; gap:6px; }
   .ptt { width:88px; height:88px; border-radius:50%; border:none; background:var(--accent); color:#fff;
@@ -138,7 +139,13 @@ function render() {
     const box = document.createElement('span'); box.className = 'box';
     box.onclick = () => toggle(it);
     const label = document.createElement('span'); label.className = 'label'; label.textContent = it.text;
-    li.append(box, label); listEl.appendChild(li);
+    li.append(box, label);
+    if (it.remindAt && !it.done) {
+      const r = document.createElement('span'); r.className = 'rem';
+      r.textContent = (it.remindAt <= Date.now() ? '⏰ ' : '🔔 ') + fmtWhen(it.remindAt);
+      li.appendChild(r);
+    }
+    listEl.appendChild(li);
   }
 }
 
@@ -161,15 +168,80 @@ $('gear').onclick = () => { $('set-token').value = cfg.token; $('set-agent').val
 $('set-cancel').onclick = () => $('settings').close();
 $('set-save').onclick = () => { cfg.token = $('set-token').value.trim(); cfg.agentId = $('set-agent').value.trim(); $('settings').close(); refresh(); };
 
-// --- Walkie-talkie: talk to Paige (ElevenLabs) ---
+// --- Helpers shared by the voice tools ---
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function resolveWhen({ in_minutes, when } = {}) {
+  if (in_minutes != null && !isNaN(Number(in_minutes))) return Date.now() + Number(in_minutes) * 60000;
+  if (when) { const t = Date.parse(when); if (!isNaN(t)) return t; }
+  return null;
+}
+function fmtWhen(ts) {
+  const d = new Date(ts), sameDay = d.toDateString() === new Date().toDateString();
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return sameDay ? time : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + time;
+}
+function matchItem(list, q) {
+  q = (q || '').toLowerCase().trim();
+  return list.find(i => i.text.toLowerCase() === q)
+    || list.find(i => i.text.toLowerCase().includes(q))
+    || list.find(i => q.includes(i.text.toLowerCase())) || null;
+}
+// Load the list, mutate it via fn (returns a message), then PUT it back.
+async function mutate(fn) {
+  const s = await api('/list');
+  const list = s.items || [];
+  const msg = fn(list);
+  await api('/list', { method: 'PUT', body: JSON.stringify({ items: list }) });
+  refresh();
+  return msg;
+}
+
+// --- Walkie-talkie: talk to Paige (ElevenLabs) — full 9-tool parity ---
 const tools = {
   add_item: async ({ text }) => { await api('/add', { method: 'POST', body: JSON.stringify({ text }) }); refresh(); return 'Added ' + text; },
   complete_item: async ({ text }) => { await api('/complete', { method: 'POST', body: JSON.stringify({ text, done: true }) }); refresh(); return 'Checked off ' + text; },
-  remove_item: async ({ text }) => {
-    const s = await api('/list'); const keep = s.items.filter(i => !i.text.toLowerCase().includes((text||'').toLowerCase()));
-    await api('/list', { method: 'PUT', body: JSON.stringify({ items: keep }) }); refresh(); return 'Removed ' + text;
+  uncomplete_item: async ({ text }) => { await api('/complete', { method: 'POST', body: JSON.stringify({ text, done: false }) }); refresh(); return 'Marked ' + text + ' as not done'; },
+  remove_item: async ({ text }) => mutate(list => {
+    const it = matchItem(list, text); if (!it) return "I couldn't find " + text;
+    list.splice(list.indexOf(it), 1); return 'Removed ' + it.text;
+  }),
+  list_items: async () => {
+    const s = await api('/list');
+    return (s.items || []).map(i => i.text + (i.done ? ' (done)' : '') + (i.remindAt && !i.done ? ' [reminder ' + fmtWhen(i.remindAt) + ']' : '')).join(', ') || 'The list is empty';
   },
-  list_items: async () => { const s = await api('/list'); return (s.items||[]).map(i => i.text + (i.done?' (done)':'')).join(', ') || 'empty'; },
+  // Reminders are stored on the shared item; the always-on Mac overlay is what
+  // actually fires them (notification + iPhone push) when they come due.
+  set_reminder: async ({ text, in_minutes, when }) => {
+    const ts = resolveWhen({ in_minutes, when });
+    if (!ts) return 'I need a time, like "in 30 minutes" or "at 3pm"';
+    if (ts <= Date.now()) return 'That time is in the past';
+    return mutate(list => {
+      let it = matchItem(list, text);
+      if (!it) { it = { id: newId(), text: (text || '').trim(), done: false }; list.push(it); }
+      it.remindAt = ts; it.notified = false;
+      return "Okay, I'll remind you about " + it.text + ' at ' + fmtWhen(ts);
+    });
+  },
+  clear_reminder: async ({ text }) => mutate(list => {
+    const it = matchItem(list, text); if (!it) return "I couldn't find " + text;
+    it.remindAt = null; it.notified = false; return 'Cleared the reminder on ' + it.text;
+  }),
+  list_reminders: async () => {
+    const s = await api('/list');
+    const p = (s.items || []).filter(i => i.remindAt && !i.done);
+    return p.length ? p.map(i => i.text + ' — ' + fmtWhen(i.remindAt)).join(', ') : 'You have no reminders set';
+  },
+  // On the phone, "notify_phone" surfaces a local notification on this device.
+  notify_phone: async ({ message }) => {
+    const body = (message || '').trim(); if (!body) return 'What should I send?';
+    try {
+      if ('Notification' in window) {
+        if (Notification.permission !== 'granted') await Notification.requestPermission();
+        if (Notification.permission === 'granted') { new Notification('Paige', { body }); return 'Done'; }
+      }
+    } catch (e) { /* fall through */ }
+    return 'Notifications are blocked on this device';
+  },
 };
 
 let convo = null;

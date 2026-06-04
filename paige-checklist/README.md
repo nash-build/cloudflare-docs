@@ -162,6 +162,12 @@ The API (all routes need `Authorization: Bearer <PAIGE_TOKEN>`):
 4. Type in the box to fire items at the list, or tap the **🎙️ walkie-talkie**
    button to talk to Paige (she adds/removes/completes via the same backend).
 
+Paige has the **same full tool set on the phone as on the Mac** (add, remove,
+complete, uncomplete, list, set/clear/list reminders, notify) — so one
+ElevenLabs agent works identically everywhere. Reminders set from the phone are
+fired by the always-on Mac overlay (notification + iPhone push); on the phone
+itself, `notify_phone` shows a local notification.
+
 ### Connect the Mac overlay to it
 
 Add a `sync` block to the Mac app's `config.json`:

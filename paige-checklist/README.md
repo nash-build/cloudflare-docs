@@ -172,6 +172,17 @@ backed by KV that also serves the mobile web app.
 
 ### Deploy the backend
 
+The fast path — a guided script that logs in, creates the KV namespace, wires it
+into `wrangler.toml`, sets your secrets, and deploys:
+
+```bash
+bash scripts/deploy.sh
+# then verify:
+bash scripts/healthcheck.sh https://paige-checklist.<you>.workers.dev <PAIGE_TOKEN>
+```
+
+Or do it by hand:
+
 ```bash
 cd server
 npm install

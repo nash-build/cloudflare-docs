@@ -138,8 +138,12 @@ on the Worker, which holds the credentials.
    match, describes it, and asks if you want a reminder.
 
 Notes: the vision model defaults to `claude-sonnet-4-6` (override with
-`CLAUDE_VISION_MODEL`). Very large screenshots may exceed Claude's per-image
-size limit; the tool reports an error string Paige will read back if so.
+`CLAUDE_VISION_MODEL`). Large screenshots are automatically downscaled to stay
+within Claude's per-image limit — files under `SCREENSHOT_INLINE_MAX_BYTES`
+(default 3.5 MB) are sent full-resolution, larger ones are sent as a Drive
+thumbnail capped at `SCREENSHOT_MAX_DIM` px (default 1568). This also lets Paige
+read types Claude doesn't natively accept (e.g. HEIC), since the thumbnail is
+JPEG.
 
 ### Usage
 

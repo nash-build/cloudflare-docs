@@ -42,10 +42,19 @@ async function findScreenshot(env, token, query) {
   u.searchParams.set('orderBy', 'modifiedTime desc');
   u.searchParams.set('pageSize', '5');
   u.searchParams.set('spaces', 'drive');
-  u.searchParams.set('fields', 'files(id,name,mimeType,modifiedTime)');
+  u.searchParams.set('fields', 'files(id,name,mimeType,modifiedTime,size,thumbnailLink)');
   const res = await fetch(u, { headers: { authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error('Drive search failed (' + res.status + ')');
   return ((await res.json()).files || [])[0] || null;
+}
+
+function bufToBase64(buf) {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < buf.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, buf.subarray(i, i + chunk));
+  }
+  return btoa(binary);
 }
 
 async function downloadBase64(token, fileId) {
@@ -53,13 +62,38 @@ async function downloadBase64(token, fileId) {
     headers: { authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Drive download failed (' + res.status + ')');
-  const buf = new Uint8Array(await res.arrayBuffer());
-  let binary = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < buf.length; i += chunk) {
-    binary += String.fromCharCode.apply(null, buf.subarray(i, i + chunk));
+  return bufToBase64(new Uint8Array(await res.arrayBuffer()));
+}
+
+// Bump a Drive thumbnail link (…=s220) up to the desired max dimension.
+function sizedThumb(link, dim) {
+  if (/=s\d+(-c)?$/.test(link)) return link.replace(/=s\d+(-c)?$/, '=s' + dim);
+  return link;
+}
+
+// Pick image bytes to send to Claude, keeping the payload within limits:
+//  - small, Claude-native image  -> send the full file
+//  - otherwise                   -> send a resized JPEG thumbnail from Drive
+// Returns { base64, mediaType }.
+async function fetchImage(env, token, file) {
+  const maxDim = Number(env.SCREENSHOT_MAX_DIM) || 1568;
+  const inlineMax = Number(env.SCREENSHOT_INLINE_MAX_BYTES) || 3_500_000;
+  const size = Number(file.size) || 0;
+  const native = SUPPORTED[file.mimeType];
+
+  if (native && size && size <= inlineMax) {
+    return { base64: await downloadBase64(token, file.id), mediaType: native };
   }
-  return btoa(binary);
+  if (file.thumbnailLink) {
+    const res = await fetch(sizedThumb(file.thumbnailLink, maxDim));
+    if (res.ok) {
+      return { base64: bufToBase64(new Uint8Array(await res.arrayBuffer())), mediaType: 'image/jpeg' };
+    }
+  }
+  if (native) {
+    return { base64: await downloadBase64(token, file.id), mediaType: native };
+  }
+  throw new Error('Cannot render image type ' + file.mimeType);
 }
 
 async function describeWithClaude(env, base64, mediaType, name) {
@@ -119,11 +153,7 @@ export async function readScreenshot(env, query) {
       status: 404,
     };
   }
-  const mediaType = SUPPORTED[file.mimeType];
-  if (!mediaType) {
-    return { error: `Unsupported image type ${file.mimeType}.`, status: 415, name: file.name };
-  }
-  const base64 = await downloadBase64(token, file.id);
+  const { base64, mediaType } = await fetchImage(env, token, file);
   const description = await describeWithClaude(env, base64, mediaType, file.name);
   return { name: file.name, modifiedTime: file.modifiedTime, description };
 }

@@ -23,3 +23,5 @@ kv_namespaces = [
 [vars]
 # GDRIVE_FOLDER_ID = "your-screenshots-folder-id"   # restrict search to one folder
 # CLAUDE_VISION_MODEL = "claude-sonnet-4-6"          # override the vision model
+# SCREENSHOT_MAX_DIM = "1568"                         # max px sent to Claude (downscaled via Drive thumbnail)
+# SCREENSHOT_INLINE_MAX_BYTES = "3500000"            # files under this are sent full-res; larger are downscaled

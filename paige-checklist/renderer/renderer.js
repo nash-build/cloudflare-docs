@@ -11,7 +11,7 @@ const closeBtn = document.getElementById('close-btn');
 const statusText = document.getElementById('status-text');
 const paigeDot = document.getElementById('paige-dot');
 
-let items = []; // { id, text, done }
+let items = []; // { id, text, done, remindAt, notified }
 
 // ---------------------------------------------------------------------------
 // State + persistence
@@ -24,6 +24,27 @@ async function persist() {
 
 function setStatus(msg) {
   statusText.textContent = msg;
+}
+
+// Turn a reminder spec into an absolute epoch (ms). Accepts a number of
+// minutes from now, or an ISO/parseable date string. Returns null if neither.
+function resolveWhen({ in_minutes, when } = {}) {
+  if (in_minutes != null && !Number.isNaN(Number(in_minutes))) {
+    return Date.now() + Number(in_minutes) * 60_000;
+  }
+  if (when) {
+    const t = Date.parse(when);
+    if (!Number.isNaN(t)) return t;
+  }
+  return null;
+}
+
+function formatWhen(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return sameDay ? time : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${time}`;
 }
 
 // Resolve an item by free-text (used by voice tools — fuzzy, case-insensitive).
@@ -64,13 +85,26 @@ function render() {
     label.className = 'item-label';
     label.textContent = item.text;
 
+    li.append(box, label);
+
+    if (item.remindAt && !item.done) {
+      const overdue = item.remindAt <= Date.now();
+      if (overdue) li.classList.add('due');
+      const badge = document.createElement('span');
+      badge.className = 'reminder' + (overdue ? ' overdue' : '');
+      badge.textContent = (overdue ? '⏰ ' : '🔔 ') + formatWhen(item.remindAt);
+      badge.title = 'Reminder — click to clear';
+      badge.addEventListener('click', () => clearReminder(item.id));
+      li.appendChild(badge);
+    }
+
     const del = document.createElement('button');
     del.className = 'delete-btn';
     del.textContent = '🗑';
     del.title = 'Remove';
     del.addEventListener('click', () => removeItem(item.id));
 
-    li.append(box, label, del);
+    li.appendChild(del);
     listEl.appendChild(li);
   }
 }
@@ -101,6 +135,69 @@ async function toggleItem(id, forceDone) {
   render();
   await persist();
   return item;
+}
+
+async function setReminder(id, ts) {
+  const item = items.find((i) => i.id === id);
+  if (!item) return null;
+  item.remindAt = ts;
+  item.notified = false;
+  render();
+  await persist();
+  return item;
+}
+
+async function clearReminder(id) {
+  const item = items.find((i) => i.id === id);
+  if (!item) return null;
+  item.remindAt = null;
+  item.notified = false;
+  render();
+  await persist();
+  return item;
+}
+
+// ---------------------------------------------------------------------------
+// Reminder scheduler + native notifications (executive-assistant behaviour)
+// ---------------------------------------------------------------------------
+function fireReminder(item) {
+  // Bring the overlay forward and flash the item.
+  window.api.alertWindow();
+  render();
+  try {
+    const n = new Notification('⏰ Reminder', {
+      body: item.text,
+      requireInteraction: true,
+      silent: false,
+    });
+    n.onclick = () => window.api.alertWindow();
+  } catch (err) {
+    console.error('Notification failed:', err);
+  }
+  if (config.agentId) setStatus(`Reminder: ${item.text}`);
+}
+
+function startScheduler() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => {});
+  }
+  setInterval(() => {
+    const now = Date.now();
+    let dirty = false;
+    let rerender = false;
+    for (const item of items) {
+      if (item.done || !item.remindAt) continue;
+      if (!item.notified && item.remindAt <= now) {
+        item.notified = true;
+        dirty = true;
+        fireReminder(item);
+      }
+      // keep "overdue" styling fresh as time passes
+      if (item.remindAt <= now) rerender = true;
+    }
+    if (rerender) render();
+    if (dirty) persist();
+  }, 15_000);
 }
 
 // ---------------------------------------------------------------------------
@@ -147,7 +244,36 @@ const clientTools = {
   list_items: async () => {
     if (items.length === 0) return 'The checklist is empty.';
     return items
-      .map((i, n) => `${n + 1}. ${i.text}${i.done ? ' (done)' : ''}`)
+      .map((i, n) => {
+        const r = i.remindAt && !i.done ? ` [reminder ${formatWhen(i.remindAt)}]` : '';
+        return `${n + 1}. ${i.text}${i.done ? ' (done)' : ''}${r}`;
+      })
+      .join('\n');
+  },
+  // Executive-assistant: set a reminder on an item. Provide EITHER in_minutes
+  // (number) OR when (absolute ISO 8601 datetime, e.g. "2026-06-04T15:00:00").
+  // If the item doesn't exist yet, it is created.
+  set_reminder: async ({ text, in_minutes, when }) => {
+    const ts = resolveWhen({ in_minutes, when });
+    if (!ts) return 'I need a time — say something like "in 30 minutes" or "at 3pm".';
+    if (ts <= Date.now()) return 'That time is in the past — give me a future time.';
+    let item = findItem(text);
+    if (!item) item = await addItem(text);
+    if (!item) return 'I need the item text to set a reminder.';
+    await setReminder(item.id, ts);
+    return `Okay — I'll remind you about "${item.text}" at ${formatWhen(ts)}.`;
+  },
+  clear_reminder: async ({ text }) => {
+    const item = findItem(text);
+    if (!item) return `I couldn't find an item matching "${text}".`;
+    await clearReminder(item.id);
+    return `Cleared the reminder on "${item.text}".`;
+  },
+  list_reminders: async () => {
+    const pending = items.filter((i) => i.remindAt && !i.done);
+    if (pending.length === 0) return 'You have no reminders set.';
+    return pending
+      .map((i) => `${i.text} — ${formatWhen(i.remindAt)}`)
       .join('\n');
   },
 };
@@ -260,5 +386,6 @@ function startWakeWord() {
   config = (await window.api.getConfig()) || {};
   items = (await window.api.loadChecklist()) || [];
   render();
+  startScheduler();
   if (config.wakeWord !== false) startWakeWord();
 })();

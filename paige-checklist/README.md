@@ -18,8 +18,10 @@ her name.
 - Add / remove / check off items; checking an item plays a **strike-through**
   animation. The list is saved to
   `~/Library/Application Support/paige-checklist/checklist.json`.
-- **Paige** voice agent (ElevenLabs) with client tools: `add_item`,
-  `remove_item`, `complete_item`, `uncomplete_item`, `list_items`.
+- **Paige** voice agent (ElevenLabs) acts as an **executive assistant**: she can
+  read and write the checklist *and* set reminders on items.
+- **Reminders** fire native macOS notifications, bounce the Dock, and highlight
+  the item in the overlay at the scheduled time.
 - Say **"Paige"** to start talking, or click 🎙️ / press **⌘⇧P**.
 
 ## Requirements
@@ -41,22 +43,27 @@ npm start
 
 1. In the [ElevenLabs](https://elevenlabs.io/) dashboard, create a
    **Conversational AI agent**. Give it a voice you like for "Paige".
-2. Add **client tools** to the agent with these exact names and a single
-   string parameter `text` (except `list_items`, which takes no parameters):
+2. Add **client tools** to the agent with these exact names and parameters:
 
-   | Tool name         | Parameter      | What it does                          |
-   | ----------------- | -------------- | ------------------------------------- |
-   | `add_item`        | `text`         | Adds a new checklist item             |
-   | `remove_item`     | `text`         | Removes the matching item             |
-   | `complete_item`   | `text`         | Checks an item off (strike-through)   |
-   | `uncomplete_item` | `text`         | Un-checks an item                     |
-   | `list_items`      | _(none)_       | Reads the current list back to you    |
+   | Tool name         | Parameters                          | What it does                              |
+   | ----------------- | ----------------------------------- | ----------------------------------------- |
+   | `add_item`        | `text` (string)                     | Adds a new checklist item                 |
+   | `remove_item`     | `text` (string)                     | Removes the matching item                 |
+   | `complete_item`   | `text` (string)                     | Checks an item off (strike-through)       |
+   | `uncomplete_item` | `text` (string)                     | Un-checks an item                         |
+   | `list_items`      | _(none)_                            | Reads the current list back to you        |
+   | `set_reminder`    | `text` (string), `in_minutes` (number) **or** `when` (ISO 8601 string) | Schedules a reminder on an item (creates it if new) |
+   | `clear_reminder`  | `text` (string)                     | Removes the reminder from an item         |
+   | `list_reminders`  | _(none)_                            | Reads back all pending reminders          |
 
    Mark them as **blocking** (await response) so Paige can confirm results.
 3. Suggested agent system prompt:
-   > You are Paige, a concise checklist assistant. When the user asks to add,
-   > remove, complete, or review tasks, call the matching client tool. Confirm
-   > briefly. Don't read the whole list unless asked.
+   > You are Paige, a concise executive assistant managing a checklist. When the
+   > user asks to add, remove, complete, or review tasks, call the matching
+   > client tool. To set reminders, call `set_reminder`: prefer `in_minutes` for
+   > relative times ("in half an hour" → 30); for clock/calendar times, compute
+   > an absolute ISO 8601 datetime in the user's local timezone and pass it as
+   > `when`. Confirm briefly. Don't read the whole list unless asked.
 4. Copy the agent's **Agent ID** into `config.json` as `agentId`.
    - If your agent is **public**, `agentId` alone works.
    - If it's **private**, you'll need to mint a signed URL server-side and pass
@@ -65,7 +72,11 @@ npm start
 ### Usage
 
 - Say **"Paige"** → she connects and listens. Then: *"add buy milk"*,
-  *"check off buy milk"*, *"remove buy milk"*, *"what's on my list?"*.
+  *"check off buy milk"*, *"remove buy milk"*, *"what's on my list?"*,
+  *"remind me to call the bank in 30 minutes"*, *"remind me to leave at 5pm"*,
+  *"what reminders do I have?"*.
+- Reminders fire even while you're in another app — the notification appears,
+  the Dock bounces, and the overlay flashes the item.
 - Or type in the input box / click the checkbox to toggle, 🗑 to delete.
 - **⌘⇧P** toggles Paige without the wake word.
 

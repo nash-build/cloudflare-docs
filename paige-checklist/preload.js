@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('api', {
   saveChecklist: (items) => ipcRenderer.invoke('checklist:save', items),
   getConfig: () => ipcRenderer.invoke('config:get'),
   closeWindow: () => ipcRenderer.send('window:close'),
+  alertWindow: () => ipcRenderer.send('window:alert'),
   onPaigeToggle: (handler) => ipcRenderer.on('paige:toggle', () => handler()),
 });

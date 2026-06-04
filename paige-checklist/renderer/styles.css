@@ -124,6 +124,24 @@ html, body {
 }
 .item.done .checkbox::after { content: "✓"; color: #fff; font-size: 12px; }
 
+.reminder {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  color: var(--accent);
+  background: rgba(124, 156, 255, 0.14);
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.reminder.overdue {
+  color: #ffd166;
+  background: rgba(255, 209, 102, 0.16);
+}
+.item.due { background: rgba(255, 209, 102, 0.08); }
+.item.due .item-label { animation: flash 1.6s ease-in-out infinite; }
+@keyframes flash { 50% { color: #ffd166; } }
+
 .delete-btn {
   flex: 0 0 auto;
   background: transparent;

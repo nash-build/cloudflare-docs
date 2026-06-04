@@ -109,6 +109,14 @@ ipcMain.handle('checklist:load', () => loadItems());
 ipcMain.handle('checklist:save', (_evt, items) => saveItems(items));
 ipcMain.handle('config:get', () => loadConfig());
 ipcMain.on('window:close', () => app.quit());
+ipcMain.on('window:alert', () => {
+  if (!win) return;
+  // Pull the overlay to the very front and bounce the Dock for a reminder.
+  win.show();
+  win.setAlwaysOnTop(true, 'screen-saver');
+  win.moveTop();
+  if (app.dock) app.dock.bounce('critical');
+});
 
 app.whenReady().then(() => {
   createWindow();

@@ -15,5 +15,9 @@
     "pushoverToken": "",
     "pushoverUser": ""
   },
+  "sync": {
+    "url": "https://paige-checklist.YOUR-SUBDOMAIN.workers.dev",
+    "token": "SAME-AS-PAIGE_TOKEN-SECRET"
+  },
   "_comment": "Copy to config.json. WAKE WORD: leave picovoice.accessKey blank to use the built-in browser speech fallback; fill it (plus place Paige.ppn and porcupine_params.pv next to index.html) to use the robust Picovoice 'Paige' wake word. IPHONE PUSH: install the ntfy app and subscribe to ntfyTopic (treat it like a password), or set provider to 'pushover'. Remove the push block to disable phone notifications. Set wakeWord to false to disable always-listening entirely."
 }

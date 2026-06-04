@@ -12,14 +12,58 @@ const statusText = document.getElementById('status-text');
 const paigeDot = document.getElementById('paige-dot');
 
 let items = []; // { id, text, done, remindAt, notified }
+let listVersion = 0; // server sync version (0 = local-only / not yet synced)
 
 // ---------------------------------------------------------------------------
-// State + persistence
+// State + persistence (local file + optional Cloudflare backend sync)
 // ---------------------------------------------------------------------------
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
+let syncCfg = null; // { url, token } when configured
+
+function syncHeaders() {
+  return { 'content-type': 'application/json', authorization: 'Bearer ' + syncCfg.token };
+}
+
+// Push the whole list to the backend (last-write-wins; updates listVersion).
+async function pushRemote() {
+  if (!syncCfg) return;
+  try {
+    const res = await fetch(syncCfg.url.replace(/\/+$/, '') + '/list', {
+      method: 'PUT',
+      headers: syncHeaders(),
+      body: JSON.stringify({ items }),
+    });
+    if (res.ok) {
+      const state = await res.json();
+      listVersion = state.version || listVersion;
+    }
+  } catch (err) {
+    console.error('Sync push failed:', err);
+  }
+}
+
+// Pull from the backend; adopt it if it is newer than what we have locally.
+async function pullRemote() {
+  if (!syncCfg) return;
+  try {
+    const res = await fetch(syncCfg.url.replace(/\/+$/, '') + '/list', { headers: syncHeaders() });
+    if (!res.ok) return;
+    const state = await res.json();
+    if ((state.version || 0) > listVersion) {
+      listVersion = state.version;
+      items = Array.isArray(state.items) ? state.items : [];
+      render();
+      await window.api.saveChecklist(items); // keep local cache warm
+    }
+  } catch (err) {
+    console.error('Sync pull failed:', err);
+  }
+}
+
 async function persist() {
   await window.api.saveChecklist(items);
+  pushRemote(); // fire-and-forget to the backend
 }
 
 function setStatus(msg) {
@@ -436,6 +480,15 @@ function startWebSpeechWakeWord() {
   config = (await window.api.getConfig()) || {};
   items = (await window.api.loadChecklist()) || [];
   render();
+
+  // Optional backend sync (shared with the phone + future devices).
+  if (config.sync && config.sync.url && config.sync.token) {
+    syncCfg = config.sync;
+    await pullRemote();      // adopt server state on launch
+    if (items.length) pushRemote(); // seed server if it was empty
+    setInterval(pullRemote, 5000); // pick up changes from the phone
+  }
+
   startScheduler();
   if (config.wakeWord !== false) startWakeWord();
 })();

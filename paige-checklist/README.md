@@ -28,6 +28,9 @@ her name.
 - Say **"Paige"** to start talking, or click 🎙️ / press **⌘⇧P**.
 - Lives in the **menu bar** (tray icon) and can **launch at login**, so it's
   always running and reminders fire even after a restart.
+- **Phone access** — an optional Cloudflare Worker backend + mobile web app lets
+  you send items to the list and talk to Paige from your iPhone, all synced with
+  the Mac overlay.
 
 ## Requirements
 
@@ -122,6 +125,65 @@ overlay; the tray menu has **Show/Hide checklist**, **Talk to Paige**, a
 to the tray — use **Quit** to fully exit. Enabling *Launch at login* makes it
 start (hidden) when you log in, so reminders keep working after a reboot.
 
+## Use it from your phone (Cloudflare backend + mobile app)
+
+This adds a shared **source of truth** so your Mac, your iPhone, and any future
+device (the 01 / a ring) all see the same list. It's a small Cloudflare Worker
+backed by KV that also serves the mobile web app.
+
+### Deploy the backend
+
+```bash
+cd server
+npm install
+npx wrangler login
+npx wrangler kv namespace create PAIGE_KV   # paste the id into wrangler.toml
+npx wrangler secret put PAIGE_TOKEN         # choose a long random token
+npm run deploy
+```
+
+You'll get a URL like `https://paige-checklist.<you>.workers.dev`.
+
+The API (all routes need `Authorization: Bearer <PAIGE_TOKEN>`):
+
+| Route            | Method | Purpose                                            |
+| ---------------- | ------ | -------------------------------------------------- |
+| `/list`          | GET    | Read the whole list (`{ version, items }`)         |
+| `/list`          | PUT    | Replace the whole list                             |
+| `/add`           | POST   | Append one item `{ text }` — **the device hook**   |
+| `/complete`      | POST   | Toggle an item `{ id \| text, done }`              |
+
+### Use it on your iPhone
+
+1. Open the Worker URL in **Safari** on your iPhone.
+2. Tap **Share → Add to Home Screen** — now it's an app icon.
+3. Open it, tap **⚙️**, and enter your **sync token** (the `PAIGE_TOKEN`) and,
+   for voice, your **ElevenLabs Agent ID**.
+4. Type in the box to fire items at the list, or tap the **🎙️ walkie-talkie**
+   button to talk to Paige (she adds/removes/completes via the same backend).
+
+### Connect the Mac overlay to it
+
+Add a `sync` block to the Mac app's `config.json`:
+
+```json
+"sync": { "url": "https://paige-checklist.<you>.workers.dev", "token": "SAME-AS-PAIGE_TOKEN" }
+```
+
+The overlay then pulls every few seconds and pushes on every change — so items
+you send from your phone appear on the Mac (and reminders still fire there).
+
+### Wiring up a wearable later
+
+Any device that can make an HTTP request can drop items on the list — that's the
+"bones" for the 01 / your ring. Just POST to `/add`:
+
+```bash
+curl -X POST https://paige-checklist.<you>.workers.dev/add \
+  -H "Authorization: Bearer $PAIGE_TOKEN" -H "content-type: application/json" \
+  -d '{"text":"pick up dry cleaning"}'
+```
+
 ## Build a double-clickable app (no terminal)
 
 To get a normal `.app` / `.dmg` you can launch from Finder:
@@ -170,4 +232,17 @@ bundled automatically via the `renderer/**/*` glob.)
 
 It can't read your Claude.ai chats, and it can't be driven by typing "finish"
 inside the Claude.ai web chat — there's no link between that web page and this
-local app. Completion happens here: via Paige, the checkbox, or the UI.
+app. Completion happens via Paige (Mac or phone), the checkbox, or the UI.
+
+## Architecture at a glance
+
+```
+   iPhone PWA ─┐                        ┌─ macOS overlay (Electron)
+               ├─► Cloudflare Worker ◄──┤   • always-on-top, reminders, push
+   future 01/  │     + KV (shared list) │   • syncs every few seconds
+   ring (POST  ┘                        └─
+   /add) ──────►
+```
+ElevenLabs powers Paige's voice on both the Mac and the phone; each client runs
+the checklist tools against whichever store it has (local file, or the shared
+Worker when `sync` is configured).

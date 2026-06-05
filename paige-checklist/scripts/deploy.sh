@@ -44,7 +44,16 @@ if [[ "$yn" =~ ^[Yy]$ ]]; then
   npx wrangler secret put GDRIVE_CLIENT_SECRET
   npx wrangler secret put GDRIVE_REFRESH_TOKEN
   npx wrangler secret put ANTHROPIC_API_KEY
-  echo "   ↪ Remember to set GDRIVE_FOLDER_ID under [vars] in wrangler.toml (then re-deploy)."
+  printf "   Drive folder ID to limit the search (blank = search all of Drive): "
+  read -r FOLDER
+  if [ -n "$FOLDER" ]; then
+    if grep -qE '^[[:space:]]*#?[[:space:]]*GDRIVE_FOLDER_ID' wrangler.toml; then
+      sed -i.bak -E "s|^[[:space:]]*#?[[:space:]]*GDRIVE_FOLDER_ID.*|GDRIVE_FOLDER_ID = \"$FOLDER\"|" wrangler.toml && rm -f wrangler.toml.bak
+    else
+      printf '\n[vars]\nGDRIVE_FOLDER_ID = "%s"\n' "$FOLDER" >> wrangler.toml
+    fi
+    echo "   ✓ GDRIVE_FOLDER_ID set in wrangler.toml."
+  fi
 else
   echo "   Skipping screenshot secrets — you can add them later and re-deploy."
 fi

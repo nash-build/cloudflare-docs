@@ -1,0 +1,26 @@
+[project]
+name = "google-mcp-server"
+version = "0.1.0"
+description = "Multi-alias Google (Gmail) MCP server with least-privilege OAuth."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "mcp>=1.2.0",
+    "google-auth>=2.28.0",
+    "google-auth-oauthlib>=1.2.0",
+    "google-api-python-client>=2.120.0",
+    "cryptography>=42.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+google-mcp-server = "google_mcp.server:main"
+google-mcp-add-account = "google_mcp.add_account:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatchling.build.targets.wheel]
+packages = ["src/google_mcp"]

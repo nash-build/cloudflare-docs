@@ -1,0 +1,13 @@
+# Never commit secrets, tokens, or OAuth client config.
+.env
+*.env
+client_secret*.json
+credentials*.json
+token*.json
+tokens/
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/

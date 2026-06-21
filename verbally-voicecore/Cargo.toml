@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/voicecore",
+    "crates/voicecore-ffi",
+    "apps/cli",
+]
+# Keep `cargo build`/`cargo test` focused on the portable, no-I/O core + FFI.
+# The CLI is built on demand (`-p voicecore-cli`) since it pulls audio/network deps.
+default-members = [
+    "crates/voicecore",
+    "crates/voicecore-ffi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nash-build/verbally-voicecore"
+authors = ["Verbally"]
+
+[workspace.dependencies]
+rustfft = "6.2"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"

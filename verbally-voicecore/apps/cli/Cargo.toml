@@ -1,0 +1,27 @@
+[package]
+name = "voicecore-cli"
+description = "Reference CLI for the voicecore engine: enroll a voice, isolate a WAV file, or stream a cleaned mic into an ElevenLabs agent."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "voicecore"
+path = "src/main.rs"
+
+[dependencies]
+voicecore = { path = "../../crates/voicecore" }
+hound = "3.5"
+
+# Live mic capture + ElevenLabs streaming. Optional so the core CLI (enroll /
+# process-file) builds with no system audio or network dependencies.
+cpal = { version = "0.15", optional = true }
+tungstenite = { version = "0.24", optional = true }
+url = { version = "2", optional = true }
+
+[features]
+default = []
+# Enable real-time mic capture and ElevenLabs agent streaming.
+live = ["dep:cpal", "dep:tungstenite", "dep:url"]

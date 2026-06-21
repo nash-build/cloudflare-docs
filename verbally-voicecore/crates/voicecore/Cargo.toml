@@ -1,0 +1,18 @@
+[package]
+name = "voicecore"
+description = "Real-time, single-mic near-field voice isolation engine (clean-room). Keeps the enrolled speaker, rejects other voices and ambient noise. Emits 16 kHz mono PCM ready for an ElevenLabs STS / agent stream."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+rustfft.workspace = true
+
+[dev-dependencies]
+# (none — tests use the engine's own synthesis helpers)
+
+[lib]
+# Build a normal Rust rlib plus C-compatible libs so native shells can link it.
+crate-type = ["rlib", "cdylib", "staticlib"]

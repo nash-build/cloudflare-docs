@@ -9,6 +9,6 @@ pub mod embedding;
 pub mod gate;
 pub mod proximity;
 
-pub use embedding::{cosine, BandEmbedder, Embedder, SpeakerProfile};
+pub use embedding::{cosine, BandEmbedder, Embedder, MfccEmbedder, SpeakerProfile};
 pub use gate::SpeakerGate;
 pub use proximity::Proximity;

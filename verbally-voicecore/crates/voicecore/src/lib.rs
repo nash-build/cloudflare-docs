@@ -93,6 +93,12 @@ impl VoiceEngine {
         self.pipeline.is_enrolled()
     }
 
+    /// Feed an external speaker-presence score in `[0, 1]` (e.g. from an ECAPA
+    /// rolling re-scorer) to reinforce the per-frame speaker gate.
+    pub fn set_speaker_presence(&mut self, score: f32) {
+        self.pipeline.set_speaker_presence(score);
+    }
+
     /// Access the underlying pipeline (to install neural models, etc.).
     pub fn pipeline_mut(&mut self) -> &mut Pipeline {
         &mut self.pipeline

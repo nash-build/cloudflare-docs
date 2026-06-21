@@ -13,10 +13,11 @@ use crate::config::{Config, FFT_SIZE, OUTPUT_SAMPLE_RATE};
 use crate::dsp::agc::Agc;
 use crate::dsp::biquad::Biquad;
 use crate::dsp::denoise::{NeuralDenoiser, SpectralDenoiser};
+use crate::dsp::enhance::Enhancer;
 use crate::dsp::stft::Stft;
 use crate::dsp::vad::Vad;
 use crate::resample::Resampler;
-use crate::speaker::embedding::{BandEmbedder, Embedder, SpeakerProfile};
+use crate::speaker::embedding::{Embedder, MfccEmbedder, SpeakerProfile};
 use crate::speaker::gate::SpeakerGate;
 
 const N_BINS: usize = FFT_SIZE / 2 + 1;
@@ -28,6 +29,7 @@ pub struct Pipeline {
     hpf: Biquad,
     stft: Stft,
     vad: Vad,
+    enhancer: Option<Box<dyn Enhancer>>,
     denoise: SpectralDenoiser,
     neural: Option<Box<dyn NeuralDenoiser>>,
     embedder: Box<dyn Embedder>,
@@ -38,11 +40,14 @@ pub struct Pipeline {
     resampled: Vec<f32>,
     // when Some, we are enrolling: accumulate embeddings, pass audio unchanged
     enrolling: Option<SpeakerProfile>,
+    // external speaker-presence score in [0,1], e.g. from an ECAPA rolling
+    // re-scorer; 1.0 = trust the per-frame gate fully.
+    presence: f32,
 }
 
 impl Pipeline {
     pub fn new(cfg: Config) -> Self {
-        let embedder = Box::new(BandEmbedder::new(N_BINS));
+        let embedder = Box::new(MfccEmbedder::new(N_BINS, OUTPUT_SAMPLE_RATE));
         let dim = embedder.dim();
         let mut hpf = Biquad::highpass(OUTPUT_SAMPLE_RATE, cfg.highpass_hz, 0.707);
         if cfg.highpass_hz <= 0.0 {
@@ -53,6 +58,7 @@ impl Pipeline {
             hpf,
             stft: Stft::new(),
             vad: Vad::new(),
+            enhancer: None,
             denoise: SpectralDenoiser::new(),
             neural: None,
             embedder,
@@ -60,12 +66,28 @@ impl Pipeline {
             agc: Agc::new(cfg.agc_target_dbfs, cfg.agc_max_gain_db),
             resampled: Vec::with_capacity(2048),
             enrolling: None,
+            presence: 1.0,
             cfg,
         }
     }
 
-    /// Install a neural denoiser (e.g. DeepFilterNet). Composes with the
-    /// built-in spectral suppressor.
+    /// Feed an external speaker-presence score in `[0, 1]` (e.g. from an ECAPA
+    /// rolling re-scorer). It multiplies the per-frame speaker gain, so a low
+    /// score additionally attenuates audio when the heavy model is confident the
+    /// enrolled talker is absent. 1.0 leaves the per-frame gate untouched.
+    pub fn set_speaker_presence(&mut self, score: f32) {
+        self.presence = score.clamp(0.0, 1.0);
+    }
+
+    /// Install a time-domain enhancer (e.g. DeepFilterNet). Runs after high-pass
+    /// and before the STFT stage; composes with the built-in suppressor (turn
+    /// `denoise_strength` down if you want the model to do most of the work).
+    pub fn set_enhancer(&mut self, e: Box<dyn Enhancer>) {
+        self.enhancer = Some(e);
+    }
+
+    /// Install a spectral (per-bin mask) neural denoiser. Composes with the
+    /// built-in Wiener suppressor on our STFT.
     pub fn set_neural_denoiser(&mut self, d: Box<dyn NeuralDenoiser>) {
         self.neural = Some(d);
     }
@@ -117,6 +139,16 @@ impl Pipeline {
         self.resampler.process(input, &mut self.resampled);
         self.hpf.process(&mut self.resampled);
 
+        // Optional time-domain neural enhancement (e.g. DeepFilterNet) before
+        // our spectral stage.
+        if let Some(enh) = self.enhancer.as_mut() {
+            let enhanced = enh.process(&self.resampled);
+            self.resampled.clear();
+            self.resampled.extend_from_slice(&enhanced);
+        }
+
+        let presence = self.presence;
+
         // Disjoint field borrows so the STFT closure can touch the analysers
         // without re-borrowing `self`.
         let Self {
@@ -154,13 +186,16 @@ impl Pipeline {
                 profile.add(&embedder.embed(mag));
                 1.0
             } else {
-                gate.gain(
+                let g = gate.gain(
                     embedder,
                     mag,
                     cfg.speaker_focus,
                     cfg.proximity_focus,
                     cfg.speaker_gate_floor,
-                )
+                );
+                // Fold in the external (e.g. ECAPA) presence score, never below
+                // the configured floor.
+                (g * presence).max(cfg.speaker_gate_floor)
             };
 
             for m in mask.iter_mut() {
@@ -226,6 +261,52 @@ mod tests {
         let in_e: f32 = noise.iter().map(|x| x * x).sum::<f32>() / noise.len() as f32;
         let out_e: f32 = out.iter().map(|x| x * x).sum::<f32>() / out.len().max(1) as f32;
         assert!(out_e < in_e, "noise energy not reduced: in {in_e} out {out_e}");
+    }
+
+    #[test]
+    fn zero_presence_attenuates_to_floor() {
+        let mut cfg = Config::default();
+        cfg.input_sample_rate = 16_000;
+        cfg.speaker_focus = 0.9;
+        cfg.speaker_gate_floor = 0.05;
+        let mut p = Pipeline::new(cfg);
+
+        // Enroll something so the gate is active.
+        p.begin_enrollment();
+        let _ = p.process(&tone(180.0, 32_000, 16_000.0, 0.4));
+        let _ = p.finish_enrollment();
+
+        // With presence forced to 0, the wanted-speaker gain collapses to the
+        // floor, so output energy should be very low.
+        p.set_speaker_presence(0.0);
+        let out = p.process(&tone(180.0, 16_000, 16_000.0, 0.4));
+        let e: f32 = out.iter().map(|x| x * x).sum::<f32>() / out.len().max(1) as f32;
+        assert!(e < 1e-3, "presence=0 did not attenuate: energy {e}");
+    }
+
+    #[test]
+    fn enhancer_seam_is_invoked() {
+        use crate::dsp::enhance::ClosureEnhancer;
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use std::sync::Arc;
+
+        let mut cfg = Config::default();
+        cfg.input_sample_rate = 16_000;
+        cfg.denoise_strength = 0.0;
+        cfg.speaker_focus = 0.0;
+        cfg.proximity_focus = 0.0;
+        let mut p = Pipeline::new(cfg);
+
+        let called = Arc::new(AtomicBool::new(false));
+        let flag = called.clone();
+        p.set_enhancer(Box::new(ClosureEnhancer::new(move |x: &[f32]| {
+            flag.store(true, Ordering::SeqCst);
+            x.to_vec() // identity enhancer
+        })));
+
+        let out = p.process(&tone(300.0, 16_000, 16_000.0, 0.3));
+        assert!(called.load(Ordering::SeqCst), "enhancer was not called");
+        assert!(!out.is_empty());
     }
 
     #[test]

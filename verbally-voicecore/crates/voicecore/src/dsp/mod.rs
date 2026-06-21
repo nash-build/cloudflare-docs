@@ -6,5 +6,6 @@
 pub mod agc;
 pub mod biquad;
 pub mod denoise;
+pub mod enhance;
 pub mod stft;
 pub mod vad;

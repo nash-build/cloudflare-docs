@@ -89,8 +89,23 @@ let clean_16k_mono = engine.process(&mic_chunk); // → ElevenLabs
 
 The pure-DSP path runs at ~**0.001× real time** on a laptop core (measured via
 `voicecore bench`), leaving ample budget to drop in a neural denoiser
-(DeepFilterNet) or ECAPA speaker model via the provided traits — see
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+(DeepFilterNet) or ECAPA speaker model via the provided seams.
+
+## Upgrading to SOTA (open models)
+
+The default build uses open DSP and an **MFCC** speaker fingerprint. Typed seams
+let you drop in the open trained models exactly where they belong, with no
+proprietary code:
+
+| Capability | Seam | Open model |
+|------------|------|------------|
+| Neural denoise | `dsp::enhance::Enhancer` (time-domain) | **DeepFilterNet** (Rust, MIT/Apache) |
+| Per-bin neural mask | `dsp::denoise::NeuralDenoiser` | DTLN / custom |
+| Strong speaker ID | `speaker::embedding::Embedder` + `set_speaker_presence` | **ECAPA-TDNN** (ONNX) |
+
+- **How it all works** (public-knowledge brief): [`docs/HOW_IT_WORKS.md`](docs/HOW_IT_WORKS.md)
+- **Concrete model wiring**: [`docs/NEURAL_MODELS.md`](docs/NEURAL_MODELS.md)
+- **Architecture**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 ## Deployment
 

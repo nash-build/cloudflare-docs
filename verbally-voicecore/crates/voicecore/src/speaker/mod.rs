@@ -8,7 +8,9 @@
 pub mod embedding;
 pub mod gate;
 pub mod proximity;
+pub mod verify;
 
 pub use embedding::{cosine, BandEmbedder, Embedder, MfccEmbedder, SpeakerProfile};
 pub use gate::SpeakerGate;
 pub use proximity::Proximity;
+pub use verify::{MfccVerifier, PresenceScorer, SpeakerVerifier};

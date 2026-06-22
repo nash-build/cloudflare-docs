@@ -17,6 +17,7 @@ use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
+use voicecore::speaker::verify::{MfccVerifier, PresenceScorer};
 use voicecore::{Config, SpeakerProfile, VoiceEngine};
 
 use crate::Opts;
@@ -48,11 +49,19 @@ pub fn run(o: Opts) -> Result<(), String> {
     cfg.speaker_focus = o.focus.clamp(0.0, 1.0);
     cfg.proximity_focus = o.proximity.clamp(0.0, 1.0);
     let mut engine = VoiceEngine::new(cfg).map_err(|e| e.to_string())?;
+    let mut presence_scorer: Option<PresenceScorer> = None;
     if let Some(path) = &o.profile {
         let bytes = std::fs::read(path).map_err(|e| format!("read {path}: {e}"))?;
         let p = SpeakerProfile::from_bytes(&bytes).ok_or("invalid profile file")?;
         engine.set_profile(&p);
-        eprintln!("loaded speaker profile from {path}");
+        // Reinforce the fast per-frame gate with a window-level presence score.
+        // The profile centroid lives in the MfccVerifier's space, so it's a
+        // direct reference. (Swap MfccVerifier for an ECAPA ONNX verifier here
+        // for maximum robustness — see docs/NEURAL_MODELS.md.)
+        let mut scorer = PresenceScorer::new(Box::new(MfccVerifier::new()), 1.0, 0.25);
+        scorer.set_reference_embedding(p.centroid());
+        presence_scorer = Some(scorer);
+        eprintln!("loaded speaker profile from {path}; presence re-scoring enabled");
     } else {
         eprintln!("warning: no --profile; running denoise + proximity only (no speaker lock)");
     }
@@ -98,6 +107,12 @@ pub fn run(o: Opts) -> Result<(), String> {
             let clean = engine.process(&chunk);
             if clean.is_empty() {
                 continue;
+            }
+            // Window-level presence re-scoring reinforces the per-frame gate.
+            if let Some(scorer) = presence_scorer.as_mut() {
+                if let Some(score) = scorer.push(&clean) {
+                    engine.set_speaker_presence(score);
+                }
             }
             let pcm = f32_to_pcm16_le(&clean);
             let b64 = base64_encode(&pcm);

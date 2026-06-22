@@ -101,7 +101,7 @@ proprietary code:
 |------------|------|------------|--------|
 | Neural denoise | `voicecore-deepfilter` (`Enhancer`) | **DeepFilterNet** (Rust, MIT/Apache) | ERB enhancer runnable now; trained-weights slot via `BandGainModel` |
 | Per-bin neural mask | `dsp::denoise::NeuralDenoiser` | DTLN / custom | seam ready |
-| Strong speaker ID | `speaker::embedding::Embedder` + `set_speaker_presence` | **ECAPA-TDNN** (ONNX) | seam ready |
+| Window-level speaker lock | `speaker::verify::PresenceScorer` + `SpeakerVerifier` | **ECAPA-TDNN** (ONNX) | rolling re-score runnable now (MFCC); ECAPA = swap the verifier |
 
 ```bash
 # DeepFilterNet ERB enhancer through the CLI:

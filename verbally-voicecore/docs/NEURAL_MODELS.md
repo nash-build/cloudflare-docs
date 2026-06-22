@@ -85,20 +85,37 @@ let profile = SpeakerProfile::from_centroid(dvec);            // L2-normalised
 engine.set_profile(&profile);
 ```
 
-### b) Runtime scoring (rolling window)
-Because ECAPA is utterance-level, score it on a sliding ~0.75–1.0 s buffer a few
-times per second (off the audio hot path) and let it modulate the gate, while the
-fast MFCC gate handles per-frame decisions:
+### b) Runtime scoring (rolling window) — implemented
+
+This loop is already built: `speaker::verify::PresenceScorer` keeps a rolling
+window, re-scores every ~250 ms off the hot path, and feeds the result to
+`Pipeline::set_speaker_presence`, while the fast MFCC gate handles per-frame
+decisions. The `live` app wires it automatically when a `--profile` is given.
 
 ```text
-ring buffer (last ~1 s) ──every ~250 ms──▶ ECAPA ─▶ cosine vs enrolled d-vector
-                                                     │
-                                       presence score (0..1) ──▶ scales speaker_focus
+ring buffer (last ~1 s) ──every ~250 ms──▶ SpeakerVerifier ─▶ cosine vs reference
+                                                              │
+                                          presence score (0..1) ─▶ set_speaker_presence
 ```
 
-This gives ECAPA-grade identity robustness without running a heavy model every
-16 ms. (A small `set_speaker_presence(score)` hook on the pipeline is the natural
-place to feed it — straightforward to add when you wire the model.)
+```rust
+use voicecore::speaker::verify::{PresenceScorer, SpeakerVerifier};
+
+// Swap the built-in MfccVerifier for ECAPA by implementing SpeakerVerifier:
+struct EcapaVerifier { session: ort::session::Session }
+impl SpeakerVerifier for EcapaVerifier {
+    fn dim(&self) -> usize { 192 }
+    fn embed_utterance(&mut self, audio_16k: &[f32]) -> Vec<f32> { embed_utterance(&self.session, audio_16k).unwrap() }
+}
+
+let mut scorer = PresenceScorer::new(Box::new(EcapaVerifier { session }), 1.0, 0.25);
+scorer.set_reference_audio(&enrollment_16k);   // ECAPA d-vector of the enrollee
+// per chunk: if let Some(score) = scorer.push(&clean) { engine.set_speaker_presence(score); }
+```
+
+The built-in `MfccVerifier` works today (its space matches the `SpeakerProfile`
+centroid, so a saved profile is a ready reference); ECAPA is a drop-in upgrade of
+just the verifier.
 
 ### Running ECAPA ONNX with `ort`
 

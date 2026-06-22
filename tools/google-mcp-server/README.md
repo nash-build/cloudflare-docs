@@ -14,6 +14,24 @@ connected.
 > Cloud OAuth client. No credentials are ever committed to this repository and
 > nothing leaves your machine except calls to Google's own APIs.
 
+## Quickstart (just run this)
+
+If you only want it working and don't care about the details, run this one
+command **on your own machine** from the repo root:
+
+```bash
+bash tools/google-mcp-server/setup.sh
+```
+
+It creates the virtualenv, installs everything, generates the encryption key,
+writes your `.env`, and then walks you through authorizing each Gmail alias. It
+is safe to run repeatedly — it skips whatever is already done. The script will
+pause and tell you the one manual step it can't do for you: creating a Google
+Cloud OAuth client (clicking through Google's website). Follow its printed
+instructions, then run it again.
+
+The sections below explain each step in detail if you'd rather do it by hand.
+
 ## Security model / best practices
 
 This server follows Google's current guidance for desktop ("installed app")

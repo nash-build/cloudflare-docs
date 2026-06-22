@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import re
 from email.message import EmailMessage
 from typing import Any
 
@@ -10,8 +11,19 @@ from googleapiclient.discovery import build
 
 from . import auth, config
 
+# Permissive but sufficient sanity check for an email-shaped string.
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _validate_email(value: str, field: str = "account") -> str:
+    value = (value or "").strip()
+    if not _EMAIL_RE.match(value):
+        raise ValueError(f"'{field}' must be a valid email address, got: {value!r}")
+    return value
+
 
 def _service(account: str):
+    account = _validate_email(account)
     creds = auth.get_credentials(account)
     return build("gmail", "v1", credentials=creds, cache_discovery=False)
 
@@ -104,8 +116,8 @@ def list_labels(account: str) -> list[dict[str, Any]]:
     svc = _service(account)
     resp = svc.users().labels().list(userId="me").execute()
     return [
-        {"id": l["id"], "name": l["name"], "type": l.get("type")}
-        for l in resp.get("labels", [])
+        {"id": lbl["id"], "name": lbl["name"], "type": lbl.get("type")}
+        for lbl in resp.get("labels", [])
     ]
 
 
@@ -116,6 +128,9 @@ def send_message(account: str, to: str, subject: str, body: str,
             "Sending is disabled. Add the gmail.send scope to GOOGLE_MCP_SCOPES "
             "and re-authorize the account before using send_message."
         )
+    _validate_email(to, "to")
+    if cc:
+        _validate_email(cc, "cc")
     svc = _service(account)
     message = EmailMessage()
     message["To"] = to

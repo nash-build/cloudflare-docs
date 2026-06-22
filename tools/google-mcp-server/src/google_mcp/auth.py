@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +26,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 from . import config
+
+logger = logging.getLogger(__name__)
 
 
 def _account_filename(email: str) -> str:
@@ -110,6 +113,7 @@ def get_credentials(email: str) -> Credentials:
             "`python -m google_mcp.add_account` to authorize it."
         )
     if not creds.valid and creds.expired and creds.refresh_token:
+        logger.info("Refreshing expired access token for %s", email)
         creds.refresh(Request())
         store.save(email, creds)
     if not creds.valid:

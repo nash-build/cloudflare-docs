@@ -7,9 +7,19 @@ Run directly (stdio transport):
 
 from __future__ import annotations
 
+import logging
+import os
+
 from mcp.server.fastmcp import FastMCP
 
 from . import auth, config, gmail
+
+# Logs go to stderr so they never corrupt the stdio MCP protocol on stdout.
+logging.basicConfig(
+    level=os.environ.get("GOOGLE_MCP_LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 mcp = FastMCP("google-mcp-server")
 
@@ -70,7 +80,12 @@ def send_message(account: str, to: str, subject: str, body: str,
 
 def main() -> None:
     # Surface configuration errors early with a clear message.
-    config.get_scopes()
+    scopes = config.get_scopes()
+    logger.info(
+        "Starting google-mcp-server (scopes=%s, send_enabled=%s)",
+        ",".join(scopes),
+        config.send_enabled(),
+    )
     mcp.run()
 
 

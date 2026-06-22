@@ -97,11 +97,16 @@ The default build uses open DSP and an **MFCC** speaker fingerprint. Typed seams
 let you drop in the open trained models exactly where they belong, with no
 proprietary code:
 
-| Capability | Seam | Open model |
-|------------|------|------------|
-| Neural denoise | `dsp::enhance::Enhancer` (time-domain) | **DeepFilterNet** (Rust, MIT/Apache) |
-| Per-bin neural mask | `dsp::denoise::NeuralDenoiser` | DTLN / custom |
-| Strong speaker ID | `speaker::embedding::Embedder` + `set_speaker_presence` | **ECAPA-TDNN** (ONNX) |
+| Capability | Seam | Open model | Status |
+|------------|------|------------|--------|
+| Neural denoise | `voicecore-deepfilter` (`Enhancer`) | **DeepFilterNet** (Rust, MIT/Apache) | ERB enhancer runnable now; trained-weights slot via `BandGainModel` |
+| Per-bin neural mask | `dsp::denoise::NeuralDenoiser` | DTLN / custom | seam ready |
+| Strong speaker ID | `speaker::embedding::Embedder` + `set_speaker_presence` | **ECAPA-TDNN** (ONNX) | seam ready |
+
+```bash
+# DeepFilterNet ERB enhancer through the CLI:
+voicecore process noisy.wav clean.wav --deepfilter 0.9 --denoise 0.2
+```
 
 - **How it all works** (public-knowledge brief): [`docs/HOW_IT_WORKS.md`](docs/HOW_IT_WORKS.md)
 - **Concrete model wiring**: [`docs/NEURAL_MODELS.md`](docs/NEURAL_MODELS.md)

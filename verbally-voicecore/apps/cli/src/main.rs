@@ -26,6 +26,7 @@ struct Opts {
     denoise: f32,
     focus: f32,
     proximity: f32,
+    deepfilter: f32,
     agent_id: Option<String>,
     input_rate: u32,
 }
@@ -38,6 +39,7 @@ impl Default for Opts {
             denoise: d.denoise_strength,
             focus: d.speaker_focus,
             proximity: d.proximity_focus,
+            deepfilter: 0.0,
             agent_id: None,
             input_rate: 48_000,
         }
@@ -53,6 +55,7 @@ fn parse_opts(args: &[String]) -> Opts {
             "--denoise" => { o.denoise = num(args.get(i + 1)); i += 2; }
             "--focus" => { o.focus = num(args.get(i + 1)); i += 2; }
             "--proximity" => { o.proximity = num(args.get(i + 1)); i += 2; }
+            "--deepfilter" => { o.deepfilter = num(args.get(i + 1)); i += 2; }
             "--agent-id" => { o.agent_id = args.get(i + 1).cloned(); i += 2; }
             "--input-rate" => { o.input_rate = num(args.get(i + 1)) as u32; i += 2; }
             _ => { i += 1; }
@@ -77,6 +80,13 @@ fn build_engine(rate: u32, o: &Opts) -> Result<VoiceEngine, String> {
         let p = SpeakerProfile::from_bytes(&bytes).ok_or("invalid profile file")?;
         engine.set_profile(&p);
         eprintln!("loaded speaker profile from {path}");
+    }
+    if o.deepfilter > 0.0 {
+        use voicecore_deepfilter::ErbEnhancer;
+        engine
+            .pipeline_mut()
+            .set_enhancer(Box::new(ErbEnhancer::new_dsp(o.deepfilter.clamp(0.0, 1.0))));
+        eprintln!("DeepFilterNet ERB enhancer enabled (strength {})", o.deepfilter);
     }
     Ok(engine)
 }
@@ -139,7 +149,7 @@ fn cmd_bench(args: &[String]) -> Result<(), String> {
 
 fn usage() -> ExitCode {
     eprintln!(
-        "voicecore {}\n\nUSAGE:\n  voicecore enroll  <in.wav> <profile.bin>\n  voicecore process <in.wav> <out.wav> [--profile f] [--denoise x] [--focus x] [--proximity x]\n  voicecore bench   <in.wav>\n  voicecore live    --agent-id <id> [--profile f] [--input-rate 48000]   (build with --features live)",
+        "voicecore {}\n\nUSAGE:\n  voicecore enroll  <in.wav> <profile.bin>\n  voicecore process <in.wav> <out.wav> [--profile f] [--denoise x] [--focus x] [--proximity x] [--deepfilter x]\n  voicecore bench   <in.wav>\n  voicecore live    --agent-id <id> [--profile f] [--input-rate 48000]   (build with --features live)",
         voicecore::VERSION
     );
     ExitCode::from(2)

@@ -13,40 +13,60 @@ and you obtain the weights yourself — nothing proprietary is bundled.
 > Cite and comply with each model's license. Verify the license of any specific
 > checkpoint before shipping commercially.
 
-## 1. DeepFilterNet → the `Enhancer` seam
+## 1. DeepFilterNet → the `voicecore-deepfilter` crate
 
-DeepFilterNet is itself written in Rust and runs its own internal STFT + ERB
-deep filtering with look-ahead, so it belongs at the **time-domain** seam (before
-our STFT), not the per-bin mask seam.
+DeepFilterNet runs its own STFT + **ERB-band** deep filtering, so it belongs at
+the **time-domain** `Enhancer` seam (before our STFT), not the per-bin mask seam.
+This is shipped as the `voicecore-deepfilter` crate, built on the official open
+`deep_filter` crate (MIT/Apache, package `deep_filter`, lib `df`).
+
+It comes in two tiers sharing one seam:
+
+**Tier 1 — runnable today (no weights).** `ErbEnhancer::new_dsp(strength)` uses
+DeepFilterNet's exact ERB filterbank + streaming analysis/synthesis and computes
+per-band suppression gains by DSP (decision-directed Wiener over a tracked noise
+floor). It's tested and usable right now:
 
 ```rust
 use voicecore::{Config, VoiceEngine};
-use voicecore::dsp::enhance::ClosureEnhancer;
-
-// Pseudocode around the `df` crate (DeepFilterNet). Load the model once.
-let mut df = df::tract::DfTract::new(/* model dir, params */)?;
+use voicecore_deepfilter::ErbEnhancer;
 
 let mut engine = VoiceEngine::new({
     let mut c = Config::default();
     c.input_sample_rate = 48_000;
-    c.denoise_strength = 0.25;     // let the model do most of the work
+    c.denoise_strength = 0.2;      // let the enhancer carry the load
     c
 })?;
+engine.pipeline_mut().set_enhancer(Box::new(ErbEnhancer::new_dsp(0.9)));
+// engine.process(mic) → ERB-enhanced + speaker-gated 16 kHz mono.
+```
 
-engine.pipeline_mut().set_enhancer(Box::new(ClosureEnhancer::new(
-    move |frame_16k: &[f32]| df.process(frame_16k).unwrap_or_else(|_| frame_16k.to_vec())
-)));
+Or from the CLI: `voicecore process in.wav out.wav --deepfilter 0.9 --denoise 0.2`.
 
-// From here, engine.process(mic) returns DeepFilterNet-cleaned + speaker-gated audio.
+**Tier 2 — full neural quality (bring the model).** The trained network predicts
+the per-band gains (and deep-filter coefficients) that Tier 1 derives by DSP.
+Implement the `BandGainModel` trait around the model run through `tract`, and the
+identical ERB layout + analysis/synthesis are reused unchanged:
+
+```rust
+use voicecore_deepfilter::{BandGainModel, ErbEnhancer};
+
+struct TractDfn { /* tract model, state */ }
+impl BandGainModel for TractDfn {
+    fn gains(&mut self, band_energy: &[f32]) -> Vec<f32> {
+        // run the DeepFilterNet ERB-gain stage; return per-band gains in [0,1]
+        self.model.run(band_energy)
+    }
+}
+
+engine.pipeline_mut().set_enhancer(Box::new(ErbEnhancer::with_model(Box::new(TractDfn::new()?))));
 ```
 
 Notes:
-- DeepFilterNet expects 48 kHz internally in some builds; if so, feed it before
-  our 16 kHz resample by hosting it in the shell, or use a 16 kHz-capable build.
-  The `Enhancer` runs *after* our resample (16 kHz), which matches DFN's
-  streaming 16 kHz API.
-- It buffers (look-ahead); returning a different sample count than the input is
-  fine — our STFT is fully streaming.
+- The enhancer runs at 16 kHz (matching our working rate). Obtain DeepFilterNet
+  model exports from the upstream repo; comply with their license.
+- It buffers in hop-sized frames; returning a different sample count than the
+  input is fine — our STFT is fully streaming.
 
 ## 2. ECAPA-TDNN → stronger "lock onto my voice"
 

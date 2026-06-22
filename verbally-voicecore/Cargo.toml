@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/voicecore",
     "crates/voicecore-ffi",
+    "crates/voicecore-deepfilter",
     "apps/cli",
 ]
 # Keep `cargo build`/`cargo test` focused on the portable, no-I/O core + FFI.

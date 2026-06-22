@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 voicecore = { path = "../../crates/voicecore" }
+voicecore-deepfilter = { path = "../../crates/voicecore-deepfilter" }
 hound = "3.5"
 
 # Live mic capture + ElevenLabs streaming. Optional so the core CLI (enroll /

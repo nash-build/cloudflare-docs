@@ -1,0 +1,12 @@
+[package]
+name = "voicecore-deepfilter"
+description = "DeepFilterNet enhancer for voicecore: wraps the open deep_filter crate as a voicecore Enhancer. Bring your own DeepFilterNet model export."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+voicecore = { path = "../voicecore" }
+deep_filter = "0.2.5"

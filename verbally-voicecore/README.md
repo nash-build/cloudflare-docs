@@ -28,11 +28,13 @@ to the mic" becomes a *learned* problem, exactly like Krisp / NVIDIA Broadcast:
 ## Layout
 
 ```
-crates/voicecore       the engine (DSP + speaker extraction), no I/O, fully tested
-crates/voicecore-ffi   C ABI (+ header) native shells link against
-apps/cli               reference CLI: enroll, process files, and live streaming
-scripts/               per-platform build scripts (Apple XCFramework, Android, desktop)
-docs/                  architecture, deployment, ElevenLabs integration, clean-room
+crates/voicecore            the engine (DSP + speaker extraction), no I/O, fully tested
+crates/voicecore-ffi        C ABI (+ header) native shells link against
+crates/voicecore-deepfilter DeepFilterNet ERB enhancer (open deep_filter crate)
+crates/voicecore-wasm       WebAssembly bindings for browser / Electron
+apps/cli                    reference CLI: enroll, process files, live streaming
+scripts/                    per-platform build scripts (Apple, Android, desktop, wasm)
+docs/                       architecture, deployment, web, ElevenLabs, neural, clean-room
 ```
 
 ## Quick start

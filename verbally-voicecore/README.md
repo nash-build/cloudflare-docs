@@ -31,6 +31,7 @@ to the mic" becomes a *learned* problem, exactly like Krisp / NVIDIA Broadcast:
 crates/voicecore            the engine (DSP + speaker extraction), no I/O, fully tested
 crates/voicecore-ffi        C ABI (+ header) native shells link against
 crates/voicecore-deepfilter DeepFilterNet ERB enhancer (open deep_filter crate)
+crates/voicecore-onnx       ONNX adapters: ECAPA verifier, ONNX enhancer, log-mel front-end
 crates/voicecore-wasm       WebAssembly bindings for browser / Electron
 apps/cli                    reference CLI: enroll, process files, live streaming
 scripts/                    per-platform build scripts (Apple, Android, desktop, wasm)
@@ -103,7 +104,8 @@ proprietary code:
 |------------|------|------------|--------|
 | Neural denoise | `voicecore-deepfilter` (`Enhancer`) | **DeepFilterNet** (Rust, MIT/Apache) | ERB enhancer runnable now; trained-weights slot via `BandGainModel` |
 | Per-bin neural mask | `dsp::denoise::NeuralDenoiser` | DTLN / custom | seam ready |
-| Window-level speaker lock | `speaker::verify::PresenceScorer` + `SpeakerVerifier` | **ECAPA-TDNN** (ONNX) | rolling re-score runnable now (MFCC); ECAPA = swap the verifier |
+| Window-level speaker lock | `speaker::verify::PresenceScorer` + `SpeakerVerifier` | **ECAPA-TDNN** (ONNX) | rolling re-score runnable now (MFCC); ECAPA adapter shipped in `voicecore-onnx` |
+| ONNX runtime adapters | `voicecore-onnx` (`OnnxEcapaVerifier`, `OnnxEnhancer`, `MelFrontend`) | any ONNX export | compiled against `ort`; dynamic-loaded runtime, bring a model |
 
 ```bash
 # DeepFilterNet ERB enhancer through the CLI:

@@ -5,6 +5,7 @@ members = [
     "crates/voicecore-ffi",
     "crates/voicecore-deepfilter",
     "crates/voicecore-wasm",
+    "crates/voicecore-onnx",
     "apps/cli",
 ]
 # Keep `cargo build`/`cargo test` focused on the portable, no-I/O core + FFI.

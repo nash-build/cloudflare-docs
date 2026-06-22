@@ -117,37 +117,34 @@ The built-in `MfccVerifier` works today (its space matches the `SpeakerProfile`
 centroid, so a saved profile is a ready reference); ECAPA is a drop-in upgrade of
 just the verifier.
 
-### Running ECAPA ONNX with `ort`
+### Running ECAPA ONNX with the `voicecore-onnx` crate
+
+This is shipped — `voicecore-onnx` provides `OnnxEcapaVerifier` (a
+`SpeakerVerifier`), a pure-Rust log-mel front-end (`MelFrontend`), and a generic
+`OnnxEnhancer`. ONNX Runtime is **dynamically loaded** (the `ort` feature uses
+`load-dynamic`), so there's no build-time binary download — point `ORT_DYLIB_PATH`
+at a `libonnxruntime` (or ship it beside your binary).
 
 ```toml
-# Cargo.toml (in your shell crate, behind a `neural` feature)
-ort = { version = "2", features = ["ndarray"] }   # ONNX Runtime
-ndarray = "0.16"
+# Cargo.toml
+voicecore-onnx = { path = "../crates/voicecore-onnx", features = ["ort"] }
 ```
 
 ```rust
-use ort::{session::Session, value::Tensor};
+use voicecore_onnx::ecapa::OnnxEcapaVerifier;
+use voicecore::speaker::verify::PresenceScorer;
 
-let session = Session::builder()?
-    .with_execution_providers([
-        // CoreML on Apple, NNAPI on Android, CPU fallback elsewhere.
-        ort::execution_providers::CoreMLExecutionProvider::default().build(),
-    ])?
-    .commit_from_file("ecapa_tdnn.onnx")?;
-
-fn embed_utterance(session: &Session, audio_16k: &[f32]) -> anyhow::Result<Vec<f32>> {
-    // Most ECAPA exports take log-mel features [1, T, 80]; some take raw audio.
-    let feats = log_mel_80(audio_16k);                 // shape [T, 80]
-    let input = Tensor::from_array(([1, feats.nrows(), 80], feats.into_raw_vec()))?;
-    let out = session.run(ort::inputs![input]?)?;
-    let emb = out[0].try_extract_tensor::<f32>()?.1.to_vec();
-    Ok(l2_normalise(emb))
-}
+let verifier = OnnxEcapaVerifier::from_file("ecapa_tdnn.onnx")?; // 80-mel, 192-d
+let mut scorer = PresenceScorer::new(Box::new(verifier), 1.0, 0.25);
+scorer.set_reference_audio(&enrollment_16k);   // ECAPA d-vector of the enrollee
+// per chunk: if let Some(s) = scorer.push(&clean) { engine.set_speaker_presence(s); }
 ```
 
-Pick a checkpoint whose expected input you control (raw-audio ECAPA exports are
-simplest; otherwise reuse the engine's mel front-end). Validate the embedding
-dimension matches what you install as the profile.
+The adapter assumes input `[1, n_frames, n_mels]` and output `[1, embedding_dim]`;
+use `OnnxEcapaVerifier::with_config` to match your export's mel params and
+embedding size. For an ONNX *enhancer* (DTLN/DeepFilterNet export), use
+`voicecore_onnx::enhance::OnnxEnhancer::from_file(path, frame_size)` at the
+`Enhancer` seam.
 
 ## 3. Overlapping voices (the genuine ML piece)
 

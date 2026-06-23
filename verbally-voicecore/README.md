@@ -1,4 +1,4 @@
-# voicecore
+# verbally
 
 Real-time, single-microphone **near-field voice isolation** for voice agents.
 It keeps the *enrolled* speaker (you), attenuates other voices and ambient
@@ -28,11 +28,11 @@ to the mic" becomes a *learned* problem, exactly like Krisp / NVIDIA Broadcast:
 ## Layout
 
 ```
-crates/voicecore            the engine (DSP + speaker extraction), no I/O, fully tested
-crates/voicecore-ffi        C ABI (+ header) native shells link against
-crates/voicecore-deepfilter DeepFilterNet ERB enhancer (open deep_filter crate)
-crates/voicecore-onnx       ONNX adapters: ECAPA verifier, ONNX enhancer, log-mel front-end
-crates/voicecore-wasm       WebAssembly bindings + web kit (browser / Electron / Lovable)
+crates/verbally            the engine (DSP + speaker extraction), no I/O, fully tested
+crates/verbally-ffi        C ABI (+ header) native shells link against
+crates/verbally-deepfilter DeepFilterNet ERB enhancer (open deep_filter crate)
+crates/verbally-onnx       ONNX adapters: ECAPA verifier, ONNX enhancer, log-mel front-end
+crates/verbally-wasm       WebAssembly bindings + web kit (browser / Electron / Lovable)
 apps/cli                    reference CLI: enroll, process files, live streaming
 scripts/                    per-platform build scripts (Apple, Android, desktop, wasm)
 docs/                       architecture, deployment, web, ElevenLabs, neural, clean-room
@@ -45,24 +45,24 @@ docs/                       architecture, deployment, web, ElevenLabs, neural, c
 cargo test
 
 # Reference CLI
-cargo build --release -p voicecore-cli
+cargo build --release -p verbally-cli
 
 # 1) Enroll your voice (20–30 s of just you, any-rate WAV)
-./target/release/voicecore enroll you.wav you.profile
+./target/release/verbally enroll you.wav you.profile
 
 # 2) Isolate a file
-./target/release/voicecore process noisy.wav clean.wav --profile you.profile
+./target/release/verbally process noisy.wav clean.wav --profile you.profile
 
 # 3) Live: cleaned mic → your ElevenLabs agent (needs ALSA headers on Linux)
-cargo build --release -p voicecore-cli --features live
+cargo build --release -p verbally-cli --features live
 export ELEVENLABS_API_KEY=...        # only for private agents
-./target/release/voicecore live --agent-id <AGENT_ID> --profile you.profile
+./target/release/verbally live --agent-id <AGENT_ID> --profile you.profile
 ```
 
 ## Using the engine from Rust
 
 ```rust
-use voicecore::{Config, VoiceEngine};
+use verbally::{Config, VoiceEngine};
 
 let mut cfg = Config::default();
 cfg.input_sample_rate = 48_000;          // your mic's rate
@@ -91,7 +91,7 @@ let clean_16k_mono = engine.process(&mic_chunk); // → ElevenLabs
 ## Performance
 
 The pure-DSP path runs at ~**0.001× real time** on a laptop core (measured via
-`voicecore bench`), leaving ample budget to drop in a neural denoiser
+`verbally bench`), leaving ample budget to drop in a neural denoiser
 (DeepFilterNet) or ECAPA speaker model via the provided seams.
 
 ## Upgrading to SOTA (open models)
@@ -102,14 +102,14 @@ proprietary code:
 
 | Capability | Seam | Open model | Status |
 |------------|------|------------|--------|
-| Neural denoise | `voicecore-deepfilter` (`Enhancer`) | **DeepFilterNet** (Rust, MIT/Apache) | ERB enhancer runnable now; trained-weights slot via `BandGainModel` |
+| Neural denoise | `verbally-deepfilter` (`Enhancer`) | **DeepFilterNet** (Rust, MIT/Apache) | ERB enhancer runnable now; trained-weights slot via `BandGainModel` |
 | Per-bin neural mask | `dsp::denoise::NeuralDenoiser` | DTLN / custom | seam ready |
-| Window-level speaker lock | `speaker::verify::PresenceScorer` + `SpeakerVerifier` | **ECAPA-TDNN** (ONNX) | rolling re-score runnable now (MFCC); ECAPA adapter shipped in `voicecore-onnx` |
-| ONNX runtime adapters | `voicecore-onnx` (`OnnxEcapaVerifier`, `OnnxEnhancer`, `MelFrontend`) | any ONNX export | compiled against `ort`; dynamic-loaded runtime, bring a model |
+| Window-level speaker lock | `speaker::verify::PresenceScorer` + `SpeakerVerifier` | **ECAPA-TDNN** (ONNX) | rolling re-score runnable now (MFCC); ECAPA adapter shipped in `verbally-onnx` |
+| ONNX runtime adapters | `verbally-onnx` (`OnnxEcapaVerifier`, `OnnxEnhancer`, `MelFrontend`) | any ONNX export | compiled against `ort`; dynamic-loaded runtime, bring a model |
 
 ```bash
 # DeepFilterNet ERB enhancer through the CLI:
-voicecore process noisy.wav clean.wav --deepfilter 0.9 --denoise 0.2
+verbally process noisy.wav clean.wav --deepfilter 0.9 --denoise 0.2
 ```
 
 - **How it all works** (public-knowledge brief): [`docs/HOW_IT_WORKS.md`](docs/HOW_IT_WORKS.md)
@@ -122,7 +122,7 @@ Per-platform packaging (Apple XCFramework, Android `jniLibs`, desktop libs) is i
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). ElevenLabs wiring is in
 [`docs/ELEVENLABS.md`](docs/ELEVENLABS.md). For a browser/React SaaS app
 (e.g. **Lovable**), the drop-in web kit and steps are in
-[`docs/LOVABLE.md`](docs/LOVABLE.md) (`crates/voicecore-wasm/web/`).
+[`docs/LOVABLE.md`](docs/LOVABLE.md) (`crates/verbally-wasm/web/`).
 
 ## License
 

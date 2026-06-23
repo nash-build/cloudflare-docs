@@ -1,4 +1,4 @@
-//! `voicecore` reference CLI.
+//! `verbally` reference CLI.
 //!
 //! Subcommands:
 //!   enroll  <in.wav> <profile.bin>                 build a voice fingerprint
@@ -15,7 +15,7 @@
 use std::env;
 use std::process::ExitCode;
 
-use voicecore::{Config, SpeakerProfile, VoiceEngine};
+use verbally::{Config, SpeakerProfile, VoiceEngine};
 
 mod wav;
 #[cfg(feature = "live")]
@@ -82,7 +82,7 @@ fn build_engine(rate: u32, o: &Opts) -> Result<VoiceEngine, String> {
         eprintln!("loaded speaker profile from {path}");
     }
     if o.deepfilter > 0.0 {
-        use voicecore_deepfilter::ErbEnhancer;
+        use verbally_deepfilter::ErbEnhancer;
         engine
             .pipeline_mut()
             .set_enhancer(Box::new(ErbEnhancer::new_dsp(o.deepfilter.clamp(0.0, 1.0))));
@@ -117,13 +117,13 @@ fn cmd_process(args: &[String]) -> Result<(), String> {
     let (samples, rate) = wav::read_mono_f32(input)?;
     let mut engine = build_engine(rate, &o)?;
     let clean = engine.process(&samples);
-    wav::write_mono_f32(output, &clean, voicecore::OUTPUT_SAMPLE_RATE)?;
+    wav::write_mono_f32(output, &clean, verbally::OUTPUT_SAMPLE_RATE)?;
     println!(
         "processed {} samples @ {}Hz → {} samples @ {}Hz ({output})",
         samples.len(),
         rate,
         clean.len(),
-        voicecore::OUTPUT_SAMPLE_RATE
+        verbally::OUTPUT_SAMPLE_RATE
     );
     Ok(())
 }
@@ -149,8 +149,8 @@ fn cmd_bench(args: &[String]) -> Result<(), String> {
 
 fn usage() -> ExitCode {
     eprintln!(
-        "voicecore {}\n\nUSAGE:\n  voicecore enroll  <in.wav> <profile.bin>\n  voicecore process <in.wav> <out.wav> [--profile f] [--denoise x] [--focus x] [--proximity x] [--deepfilter x]\n  voicecore bench   <in.wav>\n  voicecore live    --agent-id <id> [--profile f] [--input-rate 48000]   (build with --features live)",
-        voicecore::VERSION
+        "verbally {}\n\nUSAGE:\n  verbally enroll  <in.wav> <profile.bin>\n  verbally process <in.wav> <out.wav> [--profile f] [--denoise x] [--focus x] [--proximity x] [--deepfilter x]\n  verbally bench   <in.wav>\n  verbally live    --agent-id <id> [--profile f] [--input-rate 48000]   (build with --features live)",
+        verbally::VERSION
     );
     ExitCode::from(2)
 }

@@ -1,4 +1,4 @@
-// AudioWorklet capture tap for voicecore.
+// AudioWorklet capture tap for verbally.
 //
 // It does no DSP itself — it just buffers mic frames to ~128 ms blocks and posts
 // them to the main thread, where the WASM engine isolates the voice. (Running
@@ -8,7 +8,7 @@
 // Place this file where your app serves static assets (e.g. Vite/Lovable
 // `public/`) and load it with `audioWorklet.addModule('/capture-worklet.js')`.
 
-class VoicecoreCapture extends AudioWorkletProcessor {
+class VerballyCapture extends AudioWorkletProcessor {
   constructor() {
     super();
     this._buf = [];
@@ -30,4 +30,4 @@ class VoicecoreCapture extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor("voicecore-capture", VoicecoreCapture);
+registerProcessor("verbally-capture", VerballyCapture);

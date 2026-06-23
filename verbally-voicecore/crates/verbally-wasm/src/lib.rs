@@ -1,4 +1,4 @@
-//! WebAssembly bindings for `voicecore`.
+//! WebAssembly bindings for `verbally`.
 //!
 //! Build with `wasm-pack build --target web` (or `cargo build --target
 //! wasm32-unknown-unknown` + `wasm-bindgen`), then drive it from an
@@ -6,7 +6,7 @@
 //! and pass the cleaned 16 kHz mono output to the ElevenLabs JS SDK.
 //!
 //! ```js
-//! import init, { WasmEngine } from "./pkg/voicecore_wasm.js";
+//! import init, { WasmEngine } from "./pkg/verbally_wasm.js";
 //! await init();
 //! const engine = new WasmEngine(48000);     // mic sample rate
 //! // enrollment (once): feed ~20–30s of your voice, then:
@@ -15,7 +15,7 @@
 //! const clean = engine.process(micFloat32);          // Float32Array @ 16 kHz
 //! ```
 
-use voicecore::{Config, SpeakerProfile, VoiceEngine};
+use verbally::{Config, SpeakerProfile, VoiceEngine};
 use wasm_bindgen::prelude::*;
 
 /// Voice-isolation engine exposed to JavaScript.
@@ -87,5 +87,5 @@ impl WasmEngine {
 /// The engine's fixed output sample rate (16000).
 #[wasm_bindgen]
 pub fn output_sample_rate() -> u32 {
-    voicecore::OUTPUT_SAMPLE_RATE
+    verbally::OUTPUT_SAMPLE_RATE
 }

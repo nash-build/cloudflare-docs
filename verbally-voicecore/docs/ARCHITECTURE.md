@@ -15,7 +15,7 @@ mic ─▶ resample(→16 kHz) ─▶ high-pass ─▶ STFT ─┬─ VAD ──
 Everything is streaming and runs on the audio thread's cadence; you can push
 arbitrary chunk sizes in and pull whatever comes out.
 
-## Modules (`crates/voicecore`)
+## Modules (`crates/verbally`)
 
 | Module | Role |
 |--------|------|

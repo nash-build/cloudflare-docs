@@ -1,0 +1,12 @@
+[package]
+name = "verbally-deepfilter"
+description = "DeepFilterNet enhancer for verbally: wraps the open deep_filter crate as a verbally Enhancer. Bring your own DeepFilterNet model export."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+verbally = { path = "../verbally" }
+deep_filter = "0.2.5"

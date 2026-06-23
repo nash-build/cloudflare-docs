@@ -1,14 +1,14 @@
-/* voicecore.h — C ABI for the voicecore real-time voice-isolation engine.
+/* verbally.h — C ABI for the verbally real-time voice-isolation engine.
  *
- * Link against libvoicecore_ffi (staticlib for Apple, cdylib for Android/desktop).
+ * Link against libverbally_ffi (staticlib for Apple, cdylib for Android/desktop).
  * All buffers are caller-owned; the library never retains pointers past a call.
  * Functions return VC_OK (0) or a negative VC_ERR_* code.
  *
  * Output is always 16 kHz mono f32 — feed it straight into an ElevenLabs
  * speech-to-speech / agent stream.
  */
-#ifndef VOICECORE_H
-#define VOICECORE_H
+#ifndef VERBALLY_H
+#define VERBALLY_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -58,4 +58,4 @@ uint32_t vc_output_sample_rate(void);
 }
 #endif
 
-#endif /* VOICECORE_H */
+#endif /* VERBALLY_H */

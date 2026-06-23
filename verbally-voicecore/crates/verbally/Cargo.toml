@@ -1,5 +1,5 @@
 [package]
-name = "voicecore"
+name = "verbally"
 description = "Real-time, single-mic near-field voice isolation engine (clean-room). Keeps the enrolled speaker, rejects other voices and ambient noise. Emits 16 kHz mono PCM ready for an ElevenLabs STS / agent stream."
 version.workspace = true
 edition.workspace = true

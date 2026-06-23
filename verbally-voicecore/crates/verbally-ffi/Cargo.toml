@@ -1,6 +1,6 @@
 [package]
-name = "voicecore-ffi"
-description = "C ABI for the voicecore engine: a stable, no_mangle surface that native shells (Swift/Kotlin/C/C++) link against. UniFFI-ready."
+name = "verbally-ffi"
+description = "C ABI for the verbally engine: a stable, no_mangle surface that native shells (Swift/Kotlin/C/C++) link against. UniFFI-ready."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,7 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-voicecore = { path = "../voicecore" }
+verbally = { path = "../verbally" }
 
 [lib]
 crate-type = ["rlib", "cdylib", "staticlib"]

@@ -1,9 +1,9 @@
-//! C-compatible FFI for `voicecore`.
+//! C-compatible FFI for `verbally`.
 //!
 //! This is the stable boundary native shells link against:
 //! * **macOS / iOS** — link the `staticlib`, call from Swift via a bridging
-//!   header (see `include/voicecore.h`).
-//! * **Android** — link the `cdylib` (`libvoicecore_ffi.so`) and call via JNI,
+//!   header (see `include/verbally.h`).
+//! * **Android** — link the `cdylib` (`libverbally_ffi.so`) and call via JNI,
 //!   or generate Kotlin bindings.
 //! * **Windows / Linux desktop** — link the `cdylib`/`staticlib` from C/C++.
 //!
@@ -25,7 +25,7 @@ use std::os::raw::c_int;
 use std::ptr;
 use std::slice;
 
-use voicecore::{Config, SpeakerProfile, VoiceEngine};
+use verbally::{Config, SpeakerProfile, VoiceEngine};
 
 /// Opaque engine handle.
 pub struct VcEngine {
@@ -225,7 +225,7 @@ pub unsafe extern "C" fn vc_engine_is_enrolled(engine: *const VcEngine) -> c_int
 /// The engine's fixed output sample rate (16000).
 #[no_mangle]
 pub extern "C" fn vc_output_sample_rate() -> u32 {
-    voicecore::OUTPUT_SAMPLE_RATE
+    verbally::OUTPUT_SAMPLE_RATE
 }
 
 #[cfg(test)]

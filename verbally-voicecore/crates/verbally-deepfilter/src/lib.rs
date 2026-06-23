@@ -1,8 +1,8 @@
-//! DeepFilterNet enhancer for `voicecore`.
+//! DeepFilterNet enhancer for `verbally`.
 //!
 //! This wraps the open [`deep_filter`](https://crates.io/crates/deep_filter)
 //! crate (from the official DeepFilterNet repo, MIT/Apache) and exposes it as a
-//! [`voicecore`] [`Enhancer`] — the time-domain seam in the pipeline.
+//! [`verbally`] [`Enhancer`] — the time-domain seam in the pipeline.
 //!
 //! ## Two tiers, one seam
 //!
@@ -24,7 +24,7 @@
 //! host. Either way: clean-room, open source, no proprietary code.
 
 use df::{Complex32, DFState};
-use voicecore::dsp::enhance::Enhancer;
+use verbally::dsp::enhance::Enhancer;
 
 /// Predicts per-ERB-band gains for one frame. The trained DeepFilterNet model
 /// implements this; [`DspBandGains`] is the built-in DSP fallback.
@@ -185,7 +185,7 @@ impl Enhancer for ErbEnhancer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use voicecore::{Config, VoiceEngine};
+    use verbally::{Config, VoiceEngine};
 
     fn white_noise(n: usize) -> Vec<f32> {
         let mut s = 99u32;

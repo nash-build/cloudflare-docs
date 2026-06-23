@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Build voicecore as an XCFramework for macOS + iOS (device & simulator).
+# Build verbally as an XCFramework for macOS + iOS (device & simulator).
 # Requires: macOS, Xcode, and the Rust Apple targets:
 #   rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios \
 #                     aarch64-apple-darwin x86_64-apple-darwin
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-CRATE=voicecore-ffi
-LIB=libvoicecore_ffi.a
+CRATE=verbally-ffi
+LIB=libverbally_ffi.a
 OUT=dist/apple
 mkdir -p "$OUT"
 
@@ -29,7 +29,7 @@ lipo -create \
   -output "$OUT/macos/$LIB"
 
 echo "==> assembling XCFramework"
-HDR=crates/voicecore-ffi/include
+HDR=crates/verbally-ffi/include
 rm -rf "$OUT/VoiceCore.xcframework"
 xcodebuild -create-xcframework \
   -library target/aarch64-apple-ios/release/$LIB -headers "$HDR" \
@@ -38,4 +38,4 @@ xcodebuild -create-xcframework \
   -output "$OUT/VoiceCore.xcframework"
 
 echo "done: $OUT/VoiceCore.xcframework"
-echo "Add it to your Xcode target and import via the bridging header (voicecore.h)."
+echo "Add it to your Xcode target and import via the bridging header (verbally.h)."

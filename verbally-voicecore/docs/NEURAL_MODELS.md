@@ -13,11 +13,11 @@ and you obtain the weights yourself — nothing proprietary is bundled.
 > Cite and comply with each model's license. Verify the license of any specific
 > checkpoint before shipping commercially.
 
-## 1. DeepFilterNet → the `voicecore-deepfilter` crate
+## 1. DeepFilterNet → the `verbally-deepfilter` crate
 
 DeepFilterNet runs its own STFT + **ERB-band** deep filtering, so it belongs at
 the **time-domain** `Enhancer` seam (before our STFT), not the per-bin mask seam.
-This is shipped as the `voicecore-deepfilter` crate, built on the official open
+This is shipped as the `verbally-deepfilter` crate, built on the official open
 `deep_filter` crate (MIT/Apache, package `deep_filter`, lib `df`).
 
 It comes in two tiers sharing one seam:
@@ -28,8 +28,8 @@ per-band suppression gains by DSP (decision-directed Wiener over a tracked noise
 floor). It's tested and usable right now:
 
 ```rust
-use voicecore::{Config, VoiceEngine};
-use voicecore_deepfilter::ErbEnhancer;
+use verbally::{Config, VoiceEngine};
+use verbally_deepfilter::ErbEnhancer;
 
 let mut engine = VoiceEngine::new({
     let mut c = Config::default();
@@ -41,7 +41,7 @@ engine.pipeline_mut().set_enhancer(Box::new(ErbEnhancer::new_dsp(0.9)));
 // engine.process(mic) → ERB-enhanced + speaker-gated 16 kHz mono.
 ```
 
-Or from the CLI: `voicecore process in.wav out.wav --deepfilter 0.9 --denoise 0.2`.
+Or from the CLI: `verbally process in.wav out.wav --deepfilter 0.9 --denoise 0.2`.
 
 **Tier 2 — full neural quality (bring the model).** The trained network predicts
 the per-band gains (and deep-filter coefficients) that Tier 1 derives by DSP.
@@ -49,7 +49,7 @@ Implement the `BandGainModel` trait around the model run through `tract`, and th
 identical ERB layout + analysis/synthesis are reused unchanged:
 
 ```rust
-use voicecore_deepfilter::{BandGainModel, ErbEnhancer};
+use verbally_deepfilter::{BandGainModel, ErbEnhancer};
 
 struct TractDfn { /* tract model, state */ }
 impl BandGainModel for TractDfn {
@@ -78,7 +78,7 @@ Run ECAPA over the whole enrollment clip, install the resulting vector as the
 profile centroid:
 
 ```rust
-use voicecore::SpeakerProfile;
+use verbally::SpeakerProfile;
 
 let dvec: Vec<f32> = ecapa.embed_utterance(&enrollment_16k)?; // 192-d, via ort
 let profile = SpeakerProfile::from_centroid(dvec);            // L2-normalised
@@ -99,7 +99,7 @@ ring buffer (last ~1 s) ──every ~250 ms──▶ SpeakerVerifier ─▶ cosi
 ```
 
 ```rust
-use voicecore::speaker::verify::{PresenceScorer, SpeakerVerifier};
+use verbally::speaker::verify::{PresenceScorer, SpeakerVerifier};
 
 // Swap the built-in MfccVerifier for ECAPA by implementing SpeakerVerifier:
 struct EcapaVerifier { session: ort::session::Session }
@@ -117,9 +117,9 @@ The built-in `MfccVerifier` works today (its space matches the `SpeakerProfile`
 centroid, so a saved profile is a ready reference); ECAPA is a drop-in upgrade of
 just the verifier.
 
-### Running ECAPA ONNX with the `voicecore-onnx` crate
+### Running ECAPA ONNX with the `verbally-onnx` crate
 
-This is shipped — `voicecore-onnx` provides `OnnxEcapaVerifier` (a
+This is shipped — `verbally-onnx` provides `OnnxEcapaVerifier` (a
 `SpeakerVerifier`), a pure-Rust log-mel front-end (`MelFrontend`), and a generic
 `OnnxEnhancer`. ONNX Runtime is **dynamically loaded** (the `ort` feature uses
 `load-dynamic`), so there's no build-time binary download — point `ORT_DYLIB_PATH`
@@ -127,12 +127,12 @@ at a `libonnxruntime` (or ship it beside your binary).
 
 ```toml
 # Cargo.toml
-voicecore-onnx = { path = "../crates/voicecore-onnx", features = ["ort"] }
+verbally-onnx = { path = "../crates/verbally-onnx", features = ["ort"] }
 ```
 
 ```rust
-use voicecore_onnx::ecapa::OnnxEcapaVerifier;
-use voicecore::speaker::verify::PresenceScorer;
+use verbally_onnx::ecapa::OnnxEcapaVerifier;
+use verbally::speaker::verify::PresenceScorer;
 
 let verifier = OnnxEcapaVerifier::from_file("ecapa_tdnn.onnx")?; // 80-mel, 192-d
 let mut scorer = PresenceScorer::new(Box::new(verifier), 1.0, 0.25);
@@ -143,7 +143,7 @@ scorer.set_reference_audio(&enrollment_16k);   // ECAPA d-vector of the enrollee
 The adapter assumes input `[1, n_frames, n_mels]` and output `[1, embedding_dim]`;
 use `OnnxEcapaVerifier::with_config` to match your export's mel params and
 embedding size. For an ONNX *enhancer* (DTLN/DeepFilterNet export), use
-`voicecore_onnx::enhance::OnnxEnhancer::from_file(path, frame_size)` at the
+`verbally_onnx::enhance::OnnxEnhancer::from_file(path, frame_size)` at the
 `Enhancer` seam.
 
 ## 3. Overlapping voices (the genuine ML piece)
@@ -163,7 +163,7 @@ Until then, the heuristic gate cleanly handles the **alternating-speaker** case
 
 ## Performance budget
 
-The DSP path runs ~0.001× real time (`voicecore bench`). Typical added cost:
+The DSP path runs ~0.001× real time (`verbally bench`). Typical added cost:
 DeepFilterNet ~0.1–0.3× RTF on a modern CPU core; ECAPA on a 1 s window a few
 times/second is negligible amortised. Use the per-platform execution providers
 (CoreML/NNAPI) on mobile to keep battery and latency in budget.

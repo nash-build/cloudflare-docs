@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build voicecore shared libs (.so) for Android ABIs using cargo-ndk.
+# Build verbally shared libs (.so) for Android ABIs using cargo-ndk.
 # Requires: Android NDK, and:
 #   cargo install cargo-ndk
 #   rustup target add aarch64-linux-android armv7-linux-androideabi \
@@ -14,8 +14,8 @@ echo "==> building cdylib for all Android ABIs"
 cargo ndk \
   -t arm64-v8a -t armeabi-v7a -t x86_64 -t x86 \
   -o "$OUT" \
-  build --release -p voicecore-ffi
+  build --release -p verbally-ffi
 
 echo "done: $OUT"
 echo "Copy jniLibs/ into your app module (src/main/jniLibs) and load with"
-echo "System.loadLibrary(\"voicecore_ffi\"); declare the externs via JNI."
+echo "System.loadLibrary(\"verbally_ffi\"); declare the externs via JNI."

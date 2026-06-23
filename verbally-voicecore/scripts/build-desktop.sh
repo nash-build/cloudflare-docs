@@ -7,18 +7,18 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "==> core engine libs (release)"
-cargo build --release -p voicecore-ffi
+cargo build --release -p verbally-ffi
 
 echo "==> reference CLI"
 if [[ "${WITH_LIVE:-1}" == "1" ]]; then
-  cargo build --release -p voicecore-cli --features live
+  cargo build --release -p verbally-cli --features live
 else
-  cargo build --release -p voicecore-cli
+  cargo build --release -p verbally-cli
 fi
 
 echo "done."
-echo "  engine:  target/release/ (libvoicecore_ffi.*)"
-echo "  cli:     target/release/voicecore"
+echo "  engine:  target/release/ (libverbally_ffi.*)"
+echo "  cli:     target/release/verbally"
 echo
-echo "Try:  ./target/release/voicecore enroll you.wav you.profile"
-echo "      ./target/release/voicecore live --agent-id <AGENT_ID> --profile you.profile"
+echo "Try:  ./target/release/verbally enroll you.wav you.profile"
+echo "      ./target/release/verbally live --agent-id <AGENT_ID> --profile you.profile"

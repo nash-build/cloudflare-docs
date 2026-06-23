@@ -1,21 +1,21 @@
-//! ONNX adapters for `voicecore`.
+//! ONNX adapters for `verbally`.
 //!
 //! * [`features`] — a pure-Rust **log-mel front-end** for speaker models. Always
 //!   available; no ONNX Runtime required.
 //! * `ecapa` (feature `ort`) — an **ECAPA-TDNN** [`SpeakerVerifier`] backed by
-//!   ONNX Runtime. Drop it into `voicecore`'s `PresenceScorer` for a
+//!   ONNX Runtime. Drop it into `verbally`'s `PresenceScorer` for a
 //!   trained-model identity lock.
 //! * `enhance` (feature `ort`) — an ONNX **time-domain enhancer** (e.g. a DTLN /
-//!   DeepFilterNet export) implementing `voicecore`'s `Enhancer`.
+//!   DeepFilterNet export) implementing `verbally`'s `Enhancer`.
 //!
 //! The `ort` feature is opt-in so the crate and its mel front-end build
 //! everywhere; enable it on a host where ONNX Runtime is available and supply
 //! your own model exports.
 //!
 //! ```ignore
-//! // Cargo.toml: voicecore-onnx = { path = "...", features = ["ort"] }
-//! use voicecore_onnx::ecapa::OnnxEcapaVerifier;
-//! use voicecore::speaker::verify::PresenceScorer;
+//! // Cargo.toml: verbally-onnx = { path = "...", features = ["ort"] }
+//! use verbally_onnx::ecapa::OnnxEcapaVerifier;
+//! use verbally::speaker::verify::PresenceScorer;
 //!
 //! let verifier = OnnxEcapaVerifier::from_file("ecapa.onnx")?;
 //! let mut scorer = PresenceScorer::new(Box::new(verifier), 1.0, 0.25);

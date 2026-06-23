@@ -7,7 +7,7 @@ nothing here wraps or modifies their code.
 ## Where it plugs in
 
 ```
-mic → voicecore engine → clean 16 kHz mono → ElevenLabs (STS / agent, your agent_id)
+mic → verbally engine → clean 16 kHz mono → ElevenLabs (STS / agent, your agent_id)
 ```
 
 The engine downsamples, denoises, and speaker-gates; ElevenLabs receives audio
@@ -29,7 +29,7 @@ protocol directly:
 
 ```bash
 export ELEVENLABS_API_KEY=sk_...     # private agents only
-./target/release/voicecore live --agent-id <AGENT_ID> --profile you.profile
+./target/release/verbally live --agent-id <AGENT_ID> --profile you.profile
 ```
 
 ## Using the official SDKs in the app shells

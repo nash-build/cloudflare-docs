@@ -1,13 +1,13 @@
-// React hook wrapper around VoicecoreAgent — drop into a Lovable / Vite + React
+// React hook wrapper around VerballyAgent — drop into a Lovable / Vite + React
 // app. Adjust the wasm import path to match your published/colocated package.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { VoicecoreAgent, type VoicecoreEngine } from "./voicecore-agent";
+import { VerballyAgent, type VerballyEngine } from "./verbally-agent";
 
 // TODO: point this at your wasm-pack output (npm package or local path).
-//   import init, { WasmEngine } from "@verbally/voicecore-wasm";
+//   import init, { WasmEngine } from "@verbally/verbally-wasm";
 // For a quick test you can colocate the pkg/ folder and import from it:
-import init, { WasmEngine } from "./pkg/voicecore_wasm.js";
+import init, { WasmEngine } from "./pkg/verbally_wasm.js";
 
 let wasmReady: Promise<void> | null = null;
 function ensureWasm(): Promise<void> {
@@ -15,12 +15,12 @@ function ensureWasm(): Promise<void> {
   return wasmReady;
 }
 
-async function createEngine(sampleRate: number): Promise<VoicecoreEngine> {
+async function createEngine(sampleRate: number): Promise<VerballyEngine> {
   await ensureWasm();
-  return new WasmEngine(sampleRate) as unknown as VoicecoreEngine;
+  return new WasmEngine(sampleRate) as unknown as VerballyEngine;
 }
 
-export interface UseVoicecoreAgentOptions {
+export interface UseVerballyAgentOptions {
   agentId?: string;
   /** Calls your backend (e.g. Supabase edge function) for a signed URL. */
   getSignedUrl?: () => Promise<string>;
@@ -28,15 +28,15 @@ export interface UseVoicecoreAgentOptions {
   workletUrl?: string;
 }
 
-export function useVoicecoreAgent(opts: UseVoicecoreAgentOptions) {
-  const agentRef = useRef<VoicecoreAgent | null>(null);
+export function useVerballyAgent(opts: UseVerballyAgentOptions) {
+  const agentRef = useRef<VerballyAgent | null>(null);
   const [status, setStatus] = useState<"idle" | "connecting" | "live" | "stopped">("idle");
   const [agentText, setAgentText] = useState("");
   const [error, setError] = useState<unknown>(null);
 
   const start = useCallback(async () => {
     if (agentRef.current) return;
-    const agent = new VoicecoreAgent({
+    const agent = new VerballyAgent({
       createEngine,
       agentId: opts.agentId,
       getSignedUrl: opts.getSignedUrl,

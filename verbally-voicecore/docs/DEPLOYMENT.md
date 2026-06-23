@@ -1,7 +1,7 @@
 # Deployment
 
-The engine is one Rust crate (`voicecore`) exposed through a C ABI
-(`voicecore-ffi`). Each platform links the compiled library and provides the mic
+The engine is one Rust crate (`verbally`) exposed through a C ABI
+(`verbally-ffi`). Each platform links the compiled library and provides the mic
 capture + ElevenLabs connection in its native shell.
 
 ## Prerequisites
@@ -25,7 +25,7 @@ cargo install cargo-ndk          # Android
 ```
 
 1. Drag `VoiceCore.xcframework` into your Xcode target.
-2. Add `crates/voicecore-ffi/include/voicecore.h` to your bridging header.
+2. Add `crates/verbally-ffi/include/verbally.h` to your bridging header.
 3. Capture with **AVAudioEngine** (`installTap` on the input node), pass the
    buffer's `floatChannelData` to `vc_engine_process`, send the cleaned samples
    to ElevenLabs with their iOS SDK.
@@ -44,7 +44,7 @@ vc_engine_process(engine, micPtr, frameCount, &out, out.count, &written)
 ## Android
 
 ```bash
-./scripts/build-android.sh       # → dist/android/jniLibs/<abi>/libvoicecore_ffi.so
+./scripts/build-android.sh       # → dist/android/jniLibs/<abi>/libverbally_ffi.so
 ```
 
 1. Copy `jniLibs/` into `app/src/main/jniLibs/`.
@@ -52,12 +52,12 @@ vc_engine_process(engine, micPtr, frameCount, &out, out.count, &written)
    audio with the ElevenLabs Android/Kotlin SDK.
 
 ```kotlin
-companion object { init { System.loadLibrary("voicecore_ffi") } }
+companion object { init { System.loadLibrary("verbally_ffi") } }
 external fun vcProcess(handle: Long, input: FloatArray, out: FloatArray): Int
 ```
 
 > Tip: for the cleanest Swift/Kotlin bindings, add **UniFFI** to
-> `voicecore-ffi` — it generates idiomatic bindings from the Rust API and removes
+> `verbally-ffi` — it generates idiomatic bindings from the Rust API and removes
 > hand-written JNI/bridging glue. The C ABI shipped here works without it.
 
 ## Windows / Linux desktop

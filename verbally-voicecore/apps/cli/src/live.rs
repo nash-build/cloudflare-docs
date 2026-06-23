@@ -23,8 +23,8 @@ use serde_json::{json, Value};
 use tungstenite::stream::MaybeTlsStream;
 use tungstenite::Message;
 
-use voicecore::speaker::verify::{MfccVerifier, PresenceScorer};
-use voicecore::{Config, SpeakerProfile, VoiceEngine};
+use verbally::speaker::verify::{MfccVerifier, PresenceScorer};
+use verbally::{Config, SpeakerProfile, VoiceEngine};
 
 use crate::Opts;
 
@@ -70,7 +70,7 @@ pub fn run(o: Opts) -> Result<(), String> {
     if o.deepfilter > 0.0 {
         engine
             .pipeline_mut()
-            .set_enhancer(Box::new(voicecore_deepfilter::ErbEnhancer::new_dsp(o.deepfilter.clamp(0.0, 1.0))));
+            .set_enhancer(Box::new(verbally_deepfilter::ErbEnhancer::new_dsp(o.deepfilter.clamp(0.0, 1.0))));
         eprintln!("DeepFilterNet ERB enhancer enabled (strength {})", o.deepfilter);
     }
 

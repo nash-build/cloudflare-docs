@@ -1,4 +1,4 @@
-//! # voicecore
+//! # verbally
 //!
 //! A clean-room, real-time **near-field voice isolation** engine for a single
 //! microphone. It keeps the *enrolled* speaker, attenuates other voices and
@@ -10,7 +10,7 @@
 //!
 //! ## Quick start
 //! ```
-//! use voicecore::{Config, VoiceEngine};
+//! use verbally::{Config, VoiceEngine};
 //!
 //! let mut cfg = Config::default();
 //! cfg.input_sample_rate = 48_000; // your mic's rate

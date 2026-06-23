@@ -1,6 +1,6 @@
 [package]
-name = "voicecore-cli"
-description = "Reference CLI for the voicecore engine: enroll a voice, isolate a WAV file, or stream a cleaned mic into an ElevenLabs agent."
+name = "verbally-cli"
+description = "Reference CLI for the verbally engine: enroll a voice, isolate a WAV file, or stream a cleaned mic into an ElevenLabs agent."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,12 +8,12 @@ repository.workspace = true
 authors.workspace = true
 
 [[bin]]
-name = "voicecore"
+name = "verbally"
 path = "src/main.rs"
 
 [dependencies]
-voicecore = { path = "../../crates/voicecore" }
-voicecore-deepfilter = { path = "../../crates/voicecore-deepfilter" }
+verbally = { path = "../../crates/verbally" }
+verbally-deepfilter = { path = "../../crates/verbally-deepfilter" }
 hound = "3.5"
 
 # Live mic capture + ElevenLabs streaming. Optional so the core CLI (enroll /

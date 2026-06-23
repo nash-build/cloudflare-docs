@@ -1,6 +1,6 @@
 # Browser / Electron (WebAssembly)
 
-`voicecore-wasm` compiles the engine to WebAssembly so you can isolate the mic
+`verbally-wasm` compiles the engine to WebAssembly so you can isolate the mic
 **in the browser** and hand cleaned audio to the ElevenLabs JS SDK — the natural
 setup for a web voice agent.
 
@@ -11,8 +11,8 @@ setup for a web voice agent.
 cargo install wasm-pack
 
 # build the JS package
-wasm-pack build crates/voicecore-wasm --target web --release
-# → crates/voicecore-wasm/pkg/  (voicecore_wasm.js + voicecore_wasm_bg.wasm)
+wasm-pack build crates/verbally-wasm --target web --release
+# → crates/verbally-wasm/pkg/  (verbally_wasm.js + verbally_wasm_bg.wasm)
 ```
 
 (The core has no OS dependencies, so it builds to `wasm32-unknown-unknown` as-is;
@@ -26,7 +26,7 @@ Do the DSP off the main thread. The worklet processor calls the engine on each
 
 ```js
 // worklet.js
-import init, { WasmEngine } from "./pkg/voicecore_wasm.js";
+import init, { WasmEngine } from "./pkg/verbally_wasm.js";
 
 class IsolateProcessor extends AudioWorkletProcessor {
   constructor() {

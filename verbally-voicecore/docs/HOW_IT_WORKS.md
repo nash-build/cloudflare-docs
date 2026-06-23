@@ -2,7 +2,7 @@
 
 This is a from-public-knowledge brief on the techniques behind modern single-mic
 voice isolation (the category Krisp, NVIDIA Broadcast, Google Meet "denoise",
-and Discord's Krisp integration sit in), and how each maps onto `voicecore`. It
+and Discord's Krisp integration sit in), and how each maps onto `verbally`. It
 cites open research and open implementations only — no proprietary SDK was
 inspected to write it.
 
@@ -68,7 +68,7 @@ Distance can't be measured by one mic geometrically, so use acoustic cues:
 fast/slow envelope ratio, folded into the gate as a secondary cue. It's a helper,
 not the decider — the embedding lock is what separates two humans.
 
-## The full chain in `voicecore`
+## The full chain in `verbally`
 
 ```
 mic → resample(16k) → high-pass → [Enhancer: DeepFilterNet] → STFT
@@ -105,7 +105,7 @@ comfortable and a single neural stage still fits.
 ## Bottom line
 
 The recipe is public: **trained denoiser + speaker-embedding lock + light
-near-field cues + careful real-time engineering.** `voicecore` implements that
+near-field cues + careful real-time engineering.** `verbally` implements that
 shape today with open DSP and gives you typed seams to drop the open trained
 models (DeepFilterNet, ECAPA) into the exact right places — reproducing the
 *results* without anyone's proprietary code.

@@ -1,6 +1,6 @@
 //! ECAPA-TDNN speaker verifier backed by ONNX Runtime.
 //!
-//! Implements `voicecore`'s `SpeakerVerifier`, so it drops straight into a
+//! Implements `verbally`'s `SpeakerVerifier`, so it drops straight into a
 //! `PresenceScorer` for a trained-model identity lock. Feeds the model log-mel
 //! features from [`crate::features`].
 //!
@@ -15,7 +15,7 @@
 use ort::session::Session;
 use ort::value::Tensor;
 
-use voicecore::speaker::verify::SpeakerVerifier;
+use verbally::speaker::verify::SpeakerVerifier;
 
 use crate::features::{MelConfig, MelFrontend};
 use crate::l2_normalise;

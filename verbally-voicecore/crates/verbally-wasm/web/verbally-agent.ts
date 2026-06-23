@@ -1,4 +1,4 @@
-// Framework-agnostic browser client: mic → voicecore (WASM) isolation →
+// Framework-agnostic browser client: mic → verbally (WASM) isolation →
 // ElevenLabs Conversational AI agent, with the agent's replies played back.
 //
 // Implements ElevenLabs' published WebSocket protocol (conversation init,
@@ -10,7 +10,7 @@
 // public `agentId` or a `getSignedUrl()` that calls YOUR backend (never put the
 // ElevenLabs API key in the browser).
 
-export interface VoicecoreEngine {
+export interface VerballyEngine {
   process(input: Float32Array): Float32Array;
   begin_enrollment(): void;
   enrollment_frames(): number;
@@ -20,9 +20,9 @@ export interface VoicecoreEngine {
   set_speaker_presence(score: number): void;
 }
 
-export interface VoicecoreAgentOptions {
+export interface VerballyAgentOptions {
   /** Create an initialized engine for the given mic sample rate. */
-  createEngine: (sampleRate: number) => Promise<VoicecoreEngine> | VoicecoreEngine;
+  createEngine: (sampleRate: number) => Promise<VerballyEngine> | VerballyEngine;
   /** Public agent id (used if getSignedUrl is not provided). */
   agentId?: string;
   /** Returns a signed wss URL from your backend (for private agents). */
@@ -38,10 +38,10 @@ export interface VoicecoreAgentOptions {
   onError?: (err: unknown) => void;
 }
 
-export class VoicecoreAgent {
-  private opts: VoicecoreAgentOptions;
+export class VerballyAgent {
+  private opts: VerballyAgentOptions;
   private ctx?: AudioContext;
-  private engine?: VoicecoreEngine;
+  private engine?: VerballyEngine;
   private ws?: WebSocket;
   private node?: AudioWorkletNode;
   private media?: MediaStream;
@@ -49,7 +49,7 @@ export class VoicecoreAgent {
   private sources: AudioBufferSourceNode[] = [];
   private running = false;
 
-  constructor(opts: VoicecoreAgentOptions) {
+  constructor(opts: VerballyAgentOptions) {
     this.opts = opts;
   }
 
@@ -85,7 +85,7 @@ export class VoicecoreAgent {
 
     // 4) Mic frames → engine → ElevenLabs.
     const src = this.ctx.createMediaStreamSource(this.media);
-    this.node = new AudioWorkletNode(this.ctx, "voicecore-capture");
+    this.node = new AudioWorkletNode(this.ctx, "verbally-capture");
     this.node.port.onmessage = (ev: MessageEvent<Float32Array>) => {
       if (!this.engine || this.ws?.readyState !== WebSocket.OPEN) return;
       const clean = this.engine.process(ev.data);

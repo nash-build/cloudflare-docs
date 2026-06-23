@@ -19,10 +19,11 @@ hound = "3.5"
 # Live mic capture + ElevenLabs streaming. Optional so the core CLI (enroll /
 # process-file) builds with no system audio or network dependencies.
 cpal = { version = "0.15", optional = true }
-tungstenite = { version = "0.24", optional = true }
-url = { version = "2", optional = true }
+tungstenite = { version = "0.24", optional = true, features = ["rustls-tls-webpki-roots"] }
+serde_json = { version = "1", optional = true }
+ureq = { version = "2", optional = true }
 
 [features]
 default = []
 # Enable real-time mic capture and ElevenLabs agent streaming.
-live = ["dep:cpal", "dep:tungstenite", "dep:url"]
+live = ["dep:cpal", "dep:tungstenite", "dep:serde_json", "dep:ureq"]

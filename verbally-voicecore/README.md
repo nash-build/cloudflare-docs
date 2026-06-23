@@ -32,7 +32,7 @@ crates/voicecore            the engine (DSP + speaker extraction), no I/O, fully
 crates/voicecore-ffi        C ABI (+ header) native shells link against
 crates/voicecore-deepfilter DeepFilterNet ERB enhancer (open deep_filter crate)
 crates/voicecore-onnx       ONNX adapters: ECAPA verifier, ONNX enhancer, log-mel front-end
-crates/voicecore-wasm       WebAssembly bindings for browser / Electron
+crates/voicecore-wasm       WebAssembly bindings + web kit (browser / Electron / Lovable)
 apps/cli                    reference CLI: enroll, process files, live streaming
 scripts/                    per-platform build scripts (Apple, Android, desktop, wasm)
 docs/                       architecture, deployment, web, ElevenLabs, neural, clean-room
@@ -120,7 +120,9 @@ voicecore process noisy.wav clean.wav --deepfilter 0.9 --denoise 0.2
 
 Per-platform packaging (Apple XCFramework, Android `jniLibs`, desktop libs) is in
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). ElevenLabs wiring is in
-[`docs/ELEVENLABS.md`](docs/ELEVENLABS.md).
+[`docs/ELEVENLABS.md`](docs/ELEVENLABS.md). For a browser/React SaaS app
+(e.g. **Lovable**), the drop-in web kit and steps are in
+[`docs/LOVABLE.md`](docs/LOVABLE.md) (`crates/voicecore-wasm/web/`).
 
 ## License
 

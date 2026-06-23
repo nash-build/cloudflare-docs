@@ -118,6 +118,10 @@ verballi process noisy.wav clean.wav --deepfilter 0.9 --denoise 0.2
 
 ## Deployment
 
+**IT / dev team — start here:** [`docs/IMPLEMENTATION.md`](docs/IMPLEMENTATION.md)
+is the end-to-end runbook (Lovable integration, public/private agents, npm publish,
+enrollment, go-live checklist).
+
 Per-platform packaging (Apple XCFramework, Android `jniLibs`, desktop libs) is in
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). ElevenLabs wiring is in
 [`docs/ELEVENLABS.md`](docs/ELEVENLABS.md). For a browser/React SaaS app

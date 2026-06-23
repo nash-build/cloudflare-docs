@@ -212,18 +212,41 @@ read -r -p "Press Enter to start authorizing an account (or Ctrl+C to stop)... "
 
 google-mcp-add-account
 
-cat <<'EOF'
+# ---------------------------------------------------------------------------
+# 7. Register with Claude Code (using the venv's Python, by absolute path)
+# ---------------------------------------------------------------------------
+# IMPORTANT: the MCP client must launch THIS venv's python, not the system one,
+# or it won't find the installed package. Use the absolute interpreter path.
+VENV_PY="$SCRIPT_DIR/.venv/bin/python"
+
+if command -v claude >/dev/null 2>&1; then
+  say "Registering the server with Claude Code..."
+  # Remove any earlier (possibly broken) registration, then add the correct one.
+  claude mcp remove google-second >/dev/null 2>&1 || true
+  if claude mcp add google-second -- "$VENV_PY" -m google_mcp.server; then
+    ok "Registered MCP server 'google-second'. RESTART Claude Code to use it."
+  else
+    warn "Auto-registration failed. Run this yourself, then restart Claude Code:"
+    echo "    claude mcp remove google-second"
+    echo "    claude mcp add google-second -- \"$VENV_PY\" -m google_mcp.server"
+  fi
+else
+  warn "The 'claude' command isn't on your PATH, so I can't auto-register."
+  echo "Run this yourself, then restart Claude Code:"
+  echo "    claude mcp add google-second -- \"$VENV_PY\" -m google_mcp.server"
+fi
+
+cat <<EOF
 
 ------------------------------------------------------------------------
-DONE. Useful follow-up commands (run them after `source .venv/bin/activate`
+DONE. Useful follow-up commands (run them after \`source .venv/bin/activate\`
 inside tools/google-mcp-server):
 
   google-mcp-add-account            # add another alias
   google-mcp-add-account --list     # see connected aliases
   google-mcp-add-account --remove you@example.com
 
-To connect this to Claude Code, run (in this folder, venv active):
-
-  claude mcp add google-second -- python -m google_mcp.server
+The server is registered for Claude Code as 'google-second' using:
+  $VENV_PY -m google_mcp.server
 ------------------------------------------------------------------------
 EOF

@@ -12,7 +12,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load a local .env if present (the .env file itself is git-ignored).
-load_dotenv()
+# Prefer the .env that ships next to this package so the server works no matter
+# which directory it is launched from (e.g. when an MCP client spawns it). Fall
+# back to the normal cwd-upward search if that file isn't there.
+_PACKAGE_ENV = Path(__file__).resolve().parents[2] / ".env"
+if _PACKAGE_ENV.is_file():
+    load_dotenv(_PACKAGE_ENV)
+else:
+    load_dotenv()
 
 # Least-privilege default: read-only access to Gmail.
 DEFAULT_SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]

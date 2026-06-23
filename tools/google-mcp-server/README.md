@@ -105,9 +105,16 @@ python -m google_mcp.add_account --remove you@example.com
 
 ### Claude Code
 
+Register the server using the **virtualenv's** Python by absolute path — the MCP
+client launches the command from an arbitrary working directory, so a bare
+`python` would use the wrong interpreter and fail to import the package:
+
 ```bash
-claude mcp add google-second -- python -m google_mcp.server
+claude mcp add google-second -- /full/path/to/tools/google-mcp-server/.venv/bin/python -m google_mcp.server
 ```
+
+(`setup.sh` does this for you automatically, filling in the correct absolute
+path.)
 
 ### Claude Desktop (`claude_desktop_config.json`)
 

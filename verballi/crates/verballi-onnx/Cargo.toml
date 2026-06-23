@@ -1,0 +1,22 @@
+[package]
+name = "verballi-onnx"
+description = "ONNX runtime adapters for verballi: ECAPA-TDNN speaker verifier and ONNX speech enhancer, plus a log-mel front-end. The heavy ONNX Runtime (ort) is behind the `ort` feature so the crate (and its mel front-end) builds everywhere."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+verballi = { path = "../verballi" }
+rustfft = { workspace = true }
+# `load-dynamic` dlopens ONNX Runtime at runtime (set ORT_DYLIB_PATH or ship the
+# lib next to your binary) instead of downloading/linking it at build time — no
+# network needed to build, and a cleaner deployment story.
+ort = { version = "=2.0.0-rc.10", optional = true, default-features = false, features = ["load-dynamic", "ndarray"] }
+ndarray = { version = "0.16", optional = true }
+
+[features]
+default = []
+# Pull in ONNX Runtime and the model-backed verifier/enhancer.
+ort = ["dep:ort", "dep:ndarray"]

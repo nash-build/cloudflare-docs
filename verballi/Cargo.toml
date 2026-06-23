@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/verballi",
+    "crates/verballi-ffi",
+    "crates/verballi-deepfilter",
+    "crates/verballi-wasm",
+    "crates/verballi-onnx",
+    "apps/cli",
+]
+# Keep `cargo build`/`cargo test` focused on the portable, no-I/O core + FFI.
+# The CLI is built on demand (`-p verballi-cli`) since it pulls audio/network deps.
+default-members = [
+    "crates/verballi",
+    "crates/verballi-ffi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nash-build/verballi"
+authors = ["Verballi"]
+
+[workspace.dependencies]
+rustfft = "6.2"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"

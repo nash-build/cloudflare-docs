@@ -29,24 +29,65 @@ warn() { printf '\033[1;33m  !!\033[0m %s\n' "$*"; }
 # 1. Python check
 # ---------------------------------------------------------------------------
 say "Checking Python..."
-if command -v python3 >/dev/null 2>&1; then
-  PY=python3
-elif command -v python >/dev/null 2>&1; then
-  PY=python
-else
-  warn "Python is not installed. Install Python 3.10+ from https://www.python.org/downloads/ and run this again."
-  exit 1
+# Prefer a known-stable interpreter (3.10-3.13). Very new releases like 3.14
+# can fail to bootstrap pip in venvs and often lack prebuilt dependency wheels.
+PY=""
+for cand in python3.13 python3.12 python3.11 python3.10; do
+  if command -v "$cand" >/dev/null 2>&1; then
+    PY="$cand"
+    break
+  fi
+done
+# Fall back to whatever generic python is available.
+if [ -z "$PY" ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    PY=python3
+  elif command -v python >/dev/null 2>&1; then
+    PY=python
+  else
+    warn "Python is not installed. Install Python 3.12 from https://www.python.org/downloads/ and run this again."
+    exit 1
+  fi
 fi
 PY_VER="$($PY -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+PY_MINOR="$($PY -c 'import sys; print(sys.version_info[1])')"
+PY_MAJOR="$($PY -c 'import sys; print(sys.version_info[0])')"
 ok "Found Python $PY_VER ($PY)"
+
+if [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -ge 14 ]; then
+  warn "Python $PY_VER is very new; some dependencies may not have wheels yet."
+  warn "If install fails below, install Python 3.12 (https://www.python.org/downloads/release/python-3127/"
+  warn "or 'brew install python@3.12' on macOS) and re-run this script."
+fi
 
 # ---------------------------------------------------------------------------
 # 2. Virtualenv + install
 # ---------------------------------------------------------------------------
 if [ ! -d .venv ]; then
   say "Creating virtual environment (.venv)..."
-  "$PY" -m venv .venv
-  ok "Created .venv"
+  if "$PY" -m venv .venv 2>/tmp/google-mcp-venv-err; then
+    ok "Created .venv"
+  else
+    warn "Standard venv creation failed (this is the ensurepip/pip bootstrap bug on new Python)."
+    warn "Retrying without bundled pip, then installing pip manually..."
+    rm -rf .venv
+    "$PY" -m venv --without-pip .venv
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    if python -m ensurepip --upgrade >/dev/null 2>&1; then
+      ok "Bootstrapped pip via ensurepip"
+    elif command -v curl >/dev/null 2>&1; then
+      curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/google-mcp-get-pip.py
+      python /tmp/google-mcp-get-pip.py
+      ok "Bootstrapped pip via get-pip.py"
+    else
+      warn "Could not bootstrap pip automatically."
+      warn "Please install Python 3.12 (https://www.python.org/downloads/) and re-run this script."
+      exit 1
+    fi
+    deactivate 2>/dev/null || true
+    ok "Created .venv"
+  fi
 else
   ok ".venv already exists"
 fi
@@ -54,9 +95,19 @@ fi
 # shellcheck disable=SC1091
 source .venv/bin/activate
 
+# Make sure pip exists inside the venv even if a previous run left it half-built.
+if ! python -m pip --version >/dev/null 2>&1; then
+  python -m ensurepip --upgrade >/dev/null 2>&1 || true
+fi
+
 say "Installing the server (this can take a minute)..."
-pip install --quiet --upgrade pip
-pip install --quiet -e .
+python -m pip install --quiet --upgrade pip
+if ! python -m pip install --quiet -e .; then
+  warn "Install failed. This is most often a too-new Python lacking dependency wheels."
+  warn "Fix: install Python 3.12, delete the .venv folder, and re-run this script:"
+  warn "    rm -rf tools/google-mcp-server/.venv && bash tools/google-mcp-server/setup.sh"
+  exit 1
+fi
 ok "Installed google-mcp-server"
 
 # ---------------------------------------------------------------------------

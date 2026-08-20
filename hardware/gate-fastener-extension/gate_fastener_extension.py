@@ -159,18 +159,23 @@ def write_binary_stl(path, tris, header="gate fastener extension"):
 # ---------------------------------------------------------------------------
 
 
-def make_part(
+def part_levels(
     length,
-    bolt_diameter,
-    bolt_clearance,
-    pocket_kind,
-    pocket_size,
-    pocket_clearance,
-    pocket_depth,
-    wall,
-    chamfer,
-    segments,
+    bolt_diameter=0.5 * INCH,
+    bolt_clearance=0.6,
+    pocket_kind="hex",
+    pocket_size=0.75 * INCH,
+    pocket_clearance=0.5,
+    pocket_depth=9.0,
+    wall=5.0,
+    chamfer=1.0,
+    segments=180,
 ):
+    """Return the (z, outer profile, inner profile) stack plus derived sizes.
+
+    Kept separate from meshing so other tools -- the renderer, for one -- can
+    reuse the exact same geometry description.
+    """
     bore = circle(bolt_diameter + bolt_clearance)
     if pocket_kind == "hex":
         pocket = hexagon(pocket_size + pocket_clearance)
@@ -207,15 +212,22 @@ def make_part(
         (h, offset(outer, -c), offset(pocket, 0.6)),  # outer face + lead-in
     ]
 
-    tris = build_mesh(levels, segments)
     stats = {
+        "length": h,
         "outer_diameter": outer_d,
         "bore_diameter": bolt_diameter + bolt_clearance,
         "pocket_across": pocket_size + pocket_clearance,
+        "pocket_depth": pd,
         "lip_width": pocket_r - bore_r,
         "wall": wall,
-        "triangles": len(tris),
     }
+    return levels, stats
+
+
+def make_part(segments=180, **kwargs):
+    levels, stats = part_levels(segments=segments, **kwargs)
+    tris = build_mesh(levels, segments)
+    stats["triangles"] = len(tris)
     return tris, stats
 
 

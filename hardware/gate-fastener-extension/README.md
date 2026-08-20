@@ -20,6 +20,23 @@ whatever is on it, outward by the full length of the part.
    ═══════════════════   flat against the white gate fastener
 ```
 
+## What it looks like
+
+`renders/` holds views of the actual mesh, not sketches of it — `render.py`
+rasterises the same geometry the STL is built from, and `section_drawing.py`
+traces its dimensions off the same profile. Both are dependency-free:
+
+```
+python3 render.py            # part_iso, part_section, assembly_exploded (PNG)
+python3 section_drawing.py   # section_drawing.svg, dimensioned
+```
+
+- `part_iso.png` — the printed part, pocket facing up, in its print orientation.
+- `part_section.png` — cut through the axis: hex pocket, the lip, the bore.
+- `assembly_exploded.png` — post, white fastener, standoff, nut, rubber cap.
+  The orange part is the one you print; everything grey is existing hardware.
+- `section_drawing.svg` — the same section with dimensions on it.
+
 ## Measure these three things first
 
 The defaults are a guess at your hardware. Two of them are worth checking with

@@ -414,12 +414,13 @@ def scene_section(path, size=(880, 700)):
     return stats
 
 
-def scene_exploded(path, size=(1240, 520)):
-    """Exploded along the rod, in the order the parts actually stack.
+def scene_exploded(path, size=(1240, 540)):
+    """Exploded along the axis, in the order the parts actually stack.
 
-    Wood post, printed spacer, black rubber cap, white gate fastener, nut. The
-    spacer's flat foot lands on the post and its pocket swallows the cap, so it
-    fills the empty space the short rod leaves behind.
+    Post, screw, printed spacer, rubber cap on its rod, white gate fastener,
+    nut. The screw drops down the wide bore, its head seats where the bore necks
+    down, and its threads bite the tunnel and drive on into the post. The rod's
+    tip has the bore to sit in once the cap is nested in the pocket.
     """
     shell, _, stats = part_objects()
     rod_r = 0.5 * gfe.INCH / 2.0
@@ -431,23 +432,27 @@ def scene_exploded(path, size=(1240, 520)):
         objs.append({"tris": transform(tris, lay, (offset_x, 0, 0)),
                      "colour": colour, "spec": spec, "shininess": shine})
 
-    # Wood post the whole thing has to reach.
-    post, _ = box(20, 52, 50, centre=(-72, 0, 0))
+    # Wood post the screw drives into.
+    post, _ = box(20, 52, 50, centre=(-88, 0, 0))
     objs.append({"tris": post, "colour": WOOD, "spec": 0.05, "shininess": 10})
 
-    # Threaded rod, running through everything downstream of the post.
-    rod, _ = cylinder(rod_r, 108)
-    add(rod, STEEL, -50, spec=0.50, shine=70)
+    # Screw: shank then head, pointing at the post.
+    shank, _ = cylinder(2.1, 18)
+    add(shank, STEEL, -72, spec=0.50, shine=70)
+    head, _ = cylinder(3.75, 3.0)
+    add(head, STEEL, -54, spec=0.50, shine=70)
 
     # The printed spacer: foot toward the post, pocket toward the cap.
-    add(shell, PLASTIC, -40, spec=0.26, shine=34)
+    add(shell, PLASTIC, -44, spec=0.26, shine=34)
 
-    # Black rubber cap, which drops into that pocket.
+    # Black rubber cap, which drops into that pocket, and the rod it rides on.
     rubber, _ = cylinder(1.25 * gfe.INCH / 2, 9.0, hole=rod_r + 0.15)
-    add(rubber, RUBBER, 0, spec=0.14, shine=18)
+    add(rubber, RUBBER, -4, spec=0.14, shine=18)
+    rod, _ = cylinder(rod_r, 59)
+    add(rod, STEEL, -9, spec=0.50, shine=70)
 
     # White gate fastener, built as a frame so the rod hole is a real hole.
-    hw, half, plate_x, plate_t = 7.0, 18.0, 24.0, 5.0
+    hw, half, plate_x, plate_t = 7.0, 18.0, 16.0, 5.0
     for centre, sy, sz in (
         ((plate_x, 0, (hw + half) / 2), 2 * half, half - hw),
         ((plate_x, 0, -(hw + half) / 2), 2 * half, half - hw),
@@ -458,12 +463,12 @@ def scene_exploded(path, size=(1240, 520)):
         objs.append({"tris": tris, "colour": WHITE_METAL, "spec": 0.32,
                      "shininess": 44})
 
-    # Nut that pulls the stack together.
+    # Nut that pulls the rod up.
     nut, _ = hex_nut(0.75 * gfe.INCH, 8.4, 0.5 * gfe.INCH + 0.4)
-    add(nut, STEEL, 42, spec=0.50, shine=70)
+    add(nut, STEEL, 30, spec=0.50, shine=70)
 
-    target = (-11, 0, 0)
-    eye = orbit(target, 172, -72, 17)
+    target = (-24, 0, 0)
+    eye = orbit(target, 178, -72, 17)
     px = render(objs, size[0], size[1], eye, target, fov=27)
     write_png(path, px, *size)
     return stats

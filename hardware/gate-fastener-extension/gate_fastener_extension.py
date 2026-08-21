@@ -14,7 +14,9 @@ is tightened up.
     cap end
       |  [ pocket: the black rubber cap seats in here ]
       |  ------------------- <- the lip (shoulder)
-      |  [ bore: rod passes straight through ]
+      |  [ bore: clearance for the rod ]
+      |  ------------------- <- screw head seats here
+      |  [ screw tunnel: undersize, so the threads bite ]
       |
     foot (flat against the wood post)
 
@@ -171,6 +173,8 @@ def part_levels(
     pocket_depth=5.0,
     wall=4.0,
     chamfer=1.0,
+    screw_pilot=3.4,
+    screw_tunnel=12.0,
     segments=180,
 ):
     """Return the (z, outer profile, inner profile) stack plus derived sizes.
@@ -197,6 +201,19 @@ def part_levels(
     if length <= pocket_depth + chamfer:
         raise SystemExit("--length must be greater than --pocket-depth + --chamfer.")
 
+    lead = 1.2  # cone at the top of the tunnel, to guide the screw tip in
+    if screw_tunnel:
+        if screw_pilot >= bolt_diameter + bolt_clearance:
+            raise SystemExit(
+                "--screw-pilot must be smaller than the bore, otherwise there "
+                "is no shoulder for the screw head to seat on."
+            )
+        if not chamfer + lead < screw_tunnel < length - pocket_depth:
+            raise SystemExit(
+                "--screw-tunnel must be longer than the chamfer and shorter "
+                "than the body below the pocket."
+            )
+
     outer_d = 2.0 * (pocket_r + wall)
     outer = circle(outer_d)
 
@@ -204,15 +221,30 @@ def part_levels(
     pd = pocket_depth
     c = chamfer
 
-    levels = [
-        # z,          outer profile,        inner profile
-        (0.0, offset(outer, -c), offset(bore, c)),  # foot, chamfered
-        (c, outer, bore),
-        (h - pd, outer, bore),
-        (h - pd, outer, pocket),  # step -> the lip
-        (h - c, outer, pocket),
-        (h, offset(outer, -c), offset(pocket, 0.6)),  # outer face + lead-in
-    ]
+    if screw_tunnel:
+        pilot = circle(screw_pilot)
+        st = screw_tunnel
+        levels = [
+            # z,          outer profile,        inner profile
+            (0.0, offset(outer, -c), offset(pilot, c)),  # foot, chamfered
+            (c, outer, pilot),
+            (st - lead, outer, pilot),
+            (st, outer, offset(pilot, lead)),  # cone, guides the screw in
+            (st, outer, bore),  # step -> screw head seat
+            (h - pd, outer, bore),
+            (h - pd, outer, pocket),  # step -> the lip
+            (h - c, outer, pocket),
+            (h, offset(outer, -c), offset(pocket, 0.6)),
+        ]
+    else:
+        levels = [
+            (0.0, offset(outer, -c), offset(bore, c)),  # foot, chamfered
+            (c, outer, bore),
+            (h - pd, outer, bore),
+            (h - pd, outer, pocket),  # step -> the lip
+            (h - c, outer, pocket),
+            (h, offset(outer, -c), offset(pocket, 0.6)),
+        ]
 
     stats = {
         "length": h,
@@ -223,6 +255,8 @@ def part_levels(
         "pocket_depth": pd,
         "lip_width": pocket_r - bore_r,
         "wall": wall,
+        "screw_pilot": screw_pilot if screw_tunnel else 0.0,
+        "screw_tunnel": screw_tunnel,
     }
     return levels, stats
 
@@ -287,6 +321,21 @@ def main():
         default=4.0,
         help="Material left around the pocket, which sets the outer diameter.",
     )
+    p.add_argument(
+        "--screw-pilot",
+        type=float,
+        default=3.4,
+        help="Diameter of the screw tunnel. Undersize on purpose so the "
+        "threads cut into the plastic -- roughly 0.8x the screw's outer "
+        "diameter. 3.4 suits a #8 / 4.2 mm wood screw.",
+    )
+    p.add_argument(
+        "--screw-tunnel",
+        type=float,
+        default=12.0,
+        help="How far the tunnel runs up from the foot. The rest of the way is "
+        "the wide bore. Pass 0 for a plain straight-through bore.",
+    )
     p.add_argument("--chamfer", type=float, default=1.0)
     p.add_argument("--segments", type=int, default=180)
     p.add_argument("-o", "--output", default="gate_post_spacer.stl")
@@ -302,6 +351,8 @@ def main():
         pocket_depth=args.pocket_depth,
         wall=args.wall,
         chamfer=args.chamfer,
+        screw_pilot=args.screw_pilot,
+        screw_tunnel=args.screw_tunnel,
         segments=args.segments,
     )
     write_binary_stl(args.output, tris)
@@ -312,6 +363,9 @@ def main():
     print(f"  through bore      {stats['bore_diameter']:.2f} mm")
     print(f"  {args.pocket} pocket     {stats['pocket_across']:.2f} mm x "
           f"{args.pocket_depth:.2f} mm deep")
+    if stats["screw_tunnel"]:
+        print(f"  screw tunnel      {stats['screw_pilot']:.2f} mm x "
+              f"{stats['screw_tunnel']:.2f} mm up from the foot")
     print(f"  lip width         {stats['lip_width']:.2f} mm (radial)")
     print(f"  triangles         {stats['triangles']}")
 

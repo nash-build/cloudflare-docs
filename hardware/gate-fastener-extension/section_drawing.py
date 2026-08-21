@@ -37,6 +37,8 @@ def build(length, scale=13.0, **kw):
     rb = stats["bore_diameter"] / 2.0
     pd = stats["pocket_depth"]
     pa = stats["pocket_across"]
+    sp = stats["screw_pilot"]
+    st = stats["screw_tunnel"]
 
     left, top = 140.0, 126.0
     ro_px = ro * scale
@@ -104,49 +106,58 @@ def build(length, scale=13.0, **kw):
           f'stroke="{INK}" stroke-width="1.1" marker-start="url(#al)" '
           'marker-end="url(#ar)"/>')
 
-    # Overall length, below the part.
+    # Overall height, below the part.
     y_len = Y(-ro) + 58
     ext(X(0), Y(-ro) + 6, y_len + 8)
     ext(X(h), Y(-ro) + 6, y_len + 8)
     dim_line(X(0), y_len, X(h), y_len)
     text((X(0) + X(h)) / 2, y_len + 20, f"{h:.2f} overall (1-1/4 in)")
 
-    # Pocket, above the part. One label rather than two crossing dimensions.
-    y_pd = Y(ro) - 34
-    ext(X(h - pd), Y(ro) - 6, y_pd - 8)
-    ext(X(h), Y(ro) - 6, y_pd - 8)
-    dim_line(X(h - pd), y_pd, X(h), y_pd)
+    y_top = Y(ro) - 34
+
+    # Screw tunnel, above the foot end.
+    if st:
+        ext(X(0), Y(ro) - 6, y_top - 8)
+        ext(X(st), Y(ro) - 6, y_top - 8)
+        dim_line(X(0), y_top, X(st), y_top)
+        text((X(0) + X(st)) / 2, y_top - 12,
+             f"screw tunnel \u2300{sp:.2f} \u00d7 {st:.1f} deep")
+
+    # Cap pocket, above the other end.
+    ext(X(h - pd), Y(ro) - 6, y_top - 8)
+    ext(X(h), Y(ro) - 6, y_top - 8)
+    dim_line(X(h - pd), y_top, X(h), y_top)
     pocket_label = (f"hex pocket {pa:.2f} A/F \u00d7 {pd:.1f} deep"
                     if stats["pocket_kind"] == "hex"
                     else f"cap pocket \u2300{pa:.2f} \u00d7 {pd:.1f} deep")
-    text((X(h - pd) + X(h)) / 2, y_pd - 12, pocket_label, anchor="middle")
+    text((X(h - pd) + X(h)) / 2, y_top - 12, pocket_label)
 
     # Outer diameter, right.
     x_od = X(h) + 74
     exth(Y(ro), X(h) - 4, x_od + 8)
     exth(Y(-ro), X(h) - 4, x_od + 8)
     dim_line(x_od, Y(ro), x_od, Y(-ro))
-    text(x_od + 10, Y(0) + 5, f"\u2300{stats['outer_diameter']:.1f}", anchor="start")
-
-    # Bore diameter, left.
-    x_bore = X(0) - 70
-    exth(Y(rb), X(0) + 4, x_bore - 8)
-    exth(Y(-rb), X(0) + 4, x_bore - 8)
-    dim_line(x_bore, Y(rb), x_bore, Y(-rb))
-    text(x_bore - 10, Y(0) + 5, f"\u2300{stats['bore_diameter']:.1f}", anchor="end")
-
-    # Leader onto the lip, with the label sitting in the empty bore.
-    lip_y = Y((rb + pa / 2) / 2)
-    a(f'<path d="M{esc(X(4.0))},{esc(Y(2.6))} L{esc(X(9.6))},{esc(Y(2.6))} '
-      f'L{esc(X(h - pd))},{esc(lip_y)}" fill="none" stroke="{INK}" '
-      'stroke-width="1.1" marker-end="url(#ar)"/>')
-    text(X(4.0), Y(2.6) - 8, f"the lip \u2014 {stats['lip_width']:.1f} wide",
+    text(x_od + 10, Y(0) + 5, f"\u2300{stats['outer_diameter']:.2f}",
          anchor="start")
+
+    # The bore and the lip both label into the empty bore, which is the only
+    # interior space big enough to hold text without crowding the hatching.
+    bore_x0, bore_x1 = X(st if st else 0), X(h - pd)
+    text((bore_x0 + bore_x1) / 2, Y(0) - 8,
+         f"\u2300{stats['bore_diameter']:.2f} bore")
+
+    lip_text_x = bore_x0 + 26
+    text(lip_text_x, Y(0) + 44, f"the lip \u2014 {stats['lip_width']:.1f} wide",
+         anchor="start")
+    a(f'<line x1="{esc(lip_text_x + 142)}" y1="{esc(Y(0) + 39)}" '
+      f'x2="{esc(bore_x1 - 1)}" y2="{esc(Y(rb) + 4)}" stroke="{INK}" '
+      'stroke-width="1.1" marker-end="url(#ar)"/>')
 
     # Which way round it goes.
     text(X(0) + 8, Y(-ro) + 30, "foot \u2014 on the post", size=14,
          anchor="start", fill=THIN)
-    text(X(h) - 8, Y(-ro) + 30, "rubber cap end", size=14, anchor="end", fill=THIN)
+    text(X(h) - 8, Y(-ro) + 30, "rubber cap end", size=14, anchor="end",
+         fill=THIN)
 
     text(left, 34, "Rubber cap / post spacer \u2014 section", size=19,
          anchor="start", weight="600")

@@ -166,7 +166,7 @@ def part_levels(
     bolt_diameter=0.5 * INCH,
     bolt_clearance=0.6,
     pocket_kind="round",
-    pocket_size=1.0 * INCH,
+    pocket_size=1.25 * INCH,
     pocket_clearance=0.5,
     pocket_depth=5.0,
     wall=4.0,
@@ -242,7 +242,7 @@ def main():
     p.add_argument(
         "--length",
         type=float,
-        default=25.0,
+        default=1.25 * INCH,
         help="Total length in mm. Set it to the empty space between the face "
         "of the rubber cap and the wood post, plus the pocket depth.",
     )
@@ -269,7 +269,7 @@ def main():
     p.add_argument(
         "--pocket-size",
         type=float,
-        default=1.0 * INCH,
+        default=1.25 * INCH,
         help="Diameter of the round pocket, or across the flats for a hex one. "
         "For a round pocket this is the rubber cap's diameter -- MEASURE IT.",
     )

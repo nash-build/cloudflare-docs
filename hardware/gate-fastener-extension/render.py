@@ -379,7 +379,7 @@ def orbit(target, distance, azimuth, elevation):
             target[2] + distance * math.sin(el))
 
 
-def part_objects(length=25.0, **kw):
+def part_objects(length=1.25 * gfe.INCH, **kw):
     levels, stats = gfe.part_levels(length=length, segments=SEG, **kw)
     shell = gfe.build_mesh(levels, SEG)
     cap = cap_from_levels(levels)
@@ -443,7 +443,7 @@ def scene_exploded(path, size=(1240, 520)):
     add(shell, PLASTIC, -40, spec=0.26, shine=34)
 
     # Black rubber cap, which drops into that pocket.
-    rubber, _ = cylinder(0.5 * gfe.INCH, 9.0, hole=rod_r + 0.15)
+    rubber, _ = cylinder(1.25 * gfe.INCH / 2, 9.0, hole=rod_r + 0.15)
     add(rubber, RUBBER, 0, spec=0.14, shine=18)
 
     # White gate fastener, built as a frame so the rod hole is a real hole.

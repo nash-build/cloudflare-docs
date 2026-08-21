@@ -109,7 +109,7 @@ def build(length, scale=13.0, **kw):
     ext(X(0), Y(-ro) + 6, y_len + 8)
     ext(X(h), Y(-ro) + 6, y_len + 8)
     dim_line(X(0), y_len, X(h), y_len)
-    text((X(0) + X(h)) / 2, y_len + 20, f"{h:.1f} overall \u2014 gap to the post + pocket depth")
+    text((X(0) + X(h)) / 2, y_len + 20, f"{h:.2f} overall (1-1/4 in)")
 
     # Pocket, above the part. One label rather than two crossing dimensions.
     y_pd = Y(ro) - 34
@@ -171,7 +171,7 @@ def build(length, scale=13.0, **kw):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--length", type=float, default=25.0)
+    p.add_argument("--length", type=float, default=1.25 * gfe.INCH)
     p.add_argument("-o", "--output", default=None)
     args = p.parse_args()
     here = os.path.dirname(os.path.abspath(__file__))

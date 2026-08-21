@@ -42,37 +42,44 @@ python3 section_drawing.py   # section_drawing.svg, dimensioned
   part is the one you print; everything grey is hardware you already have.
 - `section_drawing.svg` — the same section, dimensioned.
 
-## Measure these two things first
+## As built
 
-Everything else is safe to leave alone. These two decide whether the print is
-usable, and the defaults are a guess from the photos:
+| | |
+|---|---|
+| Overall height | **31.75 mm** (1-1/4") |
+| Outside diameter | 40.25 mm |
+| Through bore | 13.30 mm, for a 1/2" rod |
+| Cap pocket | ⌀32.25 mm × 5.0 mm deep, for the 1-1/4" rubber cap |
+| The lip | 9.48 mm wide |
+| Wall around the pocket | 4.0 mm |
 
-| What | Default | How to measure |
-|---|---|---|
-| **The empty space** between the face of the rubber cap and the post | `--length 22` | Hold a ruler in the gap with the rod pushed home. Set `--length` to that gap **plus** the pocket depth (5 mm), since the cap sinks into the pocket. |
-| **The rubber cap's diameter** | `--pocket-size 25.4` (1") | Calipers across the widest part of the black cap. Too small and it will not seat; too big and it rattles. |
+The pocket is the cap's 31.75 mm plus 0.5 mm so it drops in rather than needing
+a press. The bore is the rod's 12.7 mm plus 0.6 mm for the same reason.
 
-Worth a quick check too: the rod is assumed to be **1/2" (12.7 mm)**. Measure
-the rod itself, not the hole it sits in — in the photos it could plausibly be
-3/8" (9.53) or 5/16" (7.94), and a 1/2" bore on a 3/8" rod will rattle. Change
-it with `--bolt-diameter`.
+One thing worth checking before you print: the part is 1-1/4" **tall**, and the
+cap sinks 5 mm into the pocket, so it pushes the cap 26.75 mm closer to the
+post — not the full 1-1/4". If what you actually measured was a 1-1/4" *gap* to
+close, print `spacer_fills_1-1_4in_gap.stl` (36.75 mm tall) instead.
+
+The rod is assumed to be **1/2" (12.7 mm)**. Measure the rod itself, not the
+hole it sits in — in the photos it could plausibly be 3/8" (9.53), and a 1/2"
+bore on a 3/8" rod will rattle. Change it with `--bolt-diameter`.
 
 ## Ready-made STLs
 
-`stl/` covers a range of gaps, all with a 13.3 mm bore for a 1/2" rod and a
-25.9 mm × 5 mm pocket for a 1" rubber cap:
+All share the 13.3 mm bore and the ⌀32.25 × 5 mm cap pocket:
 
-`spacer_10mm_cap` · `spacer_14mm_cap` · `spacer_18mm_cap` · `spacer_22mm_cap` ·
-`spacer_26mm_cap` · `spacer_30mm_cap` · `spacer_35mm_cap`
-
-The number is the part's overall length, so pick `gap + 5`. There is also
-`spacer_22mm_hexnut.stl`, which swaps the round pocket for a 19.55 mm hex one
-if you would rather trap a nut than the rubber cap.
+- **`spacer_1-1_4in.stl`** — 31.75 mm tall. The one to print.
+- `spacer_fills_1-1_4in_gap.stl` — 36.75 mm, if you meant a 1-1/4" gap.
+- `spacer_1-1_4in_minus2mm.stl` / `spacer_1-1_4in_plus2mm.stl` — 29.75 and
+  33.75 mm, for dialling in the fit.
+- `spacer_1-1_4in_hexnut.stl` — same height, but a 19.55 mm hex pocket that
+  traps a nut instead of the rubber cap.
 
 ## Rolling your own size
 
 ```
-python3 gate_fastener_extension.py --length 27 --pocket-size 24.5 -o mine.stl
+python3 gate_fastener_extension.py --length 34 --pocket-size 31.75 -o mine.stl
 python3 gate_fastener_extension.py --help      # every parameter
 ```
 
@@ -87,5 +94,6 @@ python3 gate_fastener_extension.py --help      # every parameter
   and go brittle over a season or two.
 - **No supports needed** — the pocket is a flat-bottomed recess and the bore is
   vertical.
-- Print the shortest variant first as a fit test before committing to the real
-  one; it is a few minutes and confirms the bore and pocket sizes.
+- At 40 % infill this is roughly 20 g and a couple of hours. If you want to
+  check the bore and pocket sizes first, slice `spacer_1-1_4in.stl` and stop it
+  after ~8 mm of height — that is enough to test the rod fit.

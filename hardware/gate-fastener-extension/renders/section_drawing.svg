@@ -1,35 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="633" height="683" viewBox="0 0 633 683" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="721" height="765" viewBox="0 0 721 765" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <defs>
 <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#2f3237"/></marker>
 <marker id="al" markerWidth="9" markerHeight="9" refX="0" refY="3" orient="auto"><path d="M8,0 L0,3 L8,6 z" fill="#2f3237"/></marker>
 <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#c9772f" stroke-width="1.1" opacity="0.5"/></pattern>
 </defs>
 <rect width="100%" height="100%" fill="#fcfcfa"/>
-<polygon points="140.00,139.00 153.00,126.00 400.00,126.00 400.00,126.00 452.00,126.00 465.00,139.00 465.00,170.20 452.00,178.00 400.00,178.00 400.00,259.90 153.00,259.90 140.00,246.90" fill="#f0a35f" stroke="none"/>
-<polygon points="140.00,139.00 153.00,126.00 400.00,126.00 400.00,126.00 452.00,126.00 465.00,139.00 465.00,170.20 452.00,178.00 400.00,178.00 400.00,259.90 153.00,259.90 140.00,246.90" fill="url(#hatch)" stroke="#c9772f" stroke-width="1.6" stroke-linejoin="round"/>
-<polygon points="140.00,553.70 153.00,566.70 400.00,566.70 400.00,566.70 452.00,566.70 465.00,553.70 465.00,522.50 452.00,514.70 400.00,514.70 400.00,432.80 153.00,432.80 140.00,445.80" fill="#f0a35f" stroke="none"/>
-<polygon points="140.00,553.70 153.00,566.70 400.00,566.70 400.00,566.70 452.00,566.70 465.00,553.70 465.00,522.50 452.00,514.70 400.00,514.70 400.00,432.80 153.00,432.80 140.00,445.80" fill="url(#hatch)" stroke="#c9772f" stroke-width="1.6" stroke-linejoin="round"/>
-<line x1="124.40" y1="346.35" x2="504.00" y2="346.35" stroke="#7b818b" stroke-width="1" stroke-dasharray="14 4 3 4"/>
-<line x1="140.00" y1="572.70" x2="140.00" y2="632.70" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="465.00" y1="572.70" x2="465.00" y2="632.70" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="140.00" y1="624.70" x2="465.00" y2="624.70" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
-<text x="302.50" y="644.70" fill="#2f3237" font-size="15" text-anchor="middle" font-weight="400">25.0 overall — gap to the post + pocket depth</text>
-<line x1="400.00" y1="120.00" x2="400.00" y2="84.00" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="465.00" y1="120.00" x2="465.00" y2="84.00" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="400.00" y1="92.00" x2="465.00" y2="92.00" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
-<text x="432.50" y="80.00" fill="#2f3237" font-size="15" text-anchor="middle" font-weight="400">cap pocket ⌀25.90 × 5.0 deep</text>
-<line x1="461.00" y1="126.00" x2="547.00" y2="126.00" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="461.00" y1="566.70" x2="547.00" y2="566.70" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="539.00" y1="126.00" x2="539.00" y2="566.70" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
-<text x="549.00" y="351.35" fill="#2f3237" font-size="15" text-anchor="start" font-weight="400">⌀33.9</text>
-<line x1="144.00" y1="259.90" x2="62.00" y2="259.90" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="144.00" y1="432.80" x2="62.00" y2="432.80" stroke="#7b818b" stroke-width="0.8"/>
-<line x1="70.00" y1="259.90" x2="70.00" y2="432.80" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
-<text x="60.00" y="351.35" fill="#2f3237" font-size="15" text-anchor="end" font-weight="400">⌀13.3</text>
-<path d="M192.00,312.55 L264.80,312.55 L400.00,218.95" fill="none" stroke="#2f3237" stroke-width="1.1" marker-end="url(#ar)"/>
-<text x="192.00" y="304.55" fill="#2f3237" font-size="15" text-anchor="start" font-weight="400">the lip — 6.3 wide</text>
-<text x="148.00" y="596.70" fill="#7b818b" font-size="14" text-anchor="start" font-weight="400">foot — on the post</text>
-<text x="457.00" y="596.70" fill="#7b818b" font-size="14" text-anchor="end" font-weight="400">rubber cap end</text>
+<polygon points="140.00,139.00 153.00,126.00 487.75,126.00 487.75,126.00 539.75,126.00 552.75,139.00 552.75,170.20 539.75,178.00 487.75,178.00 487.75,301.18 153.00,301.18 140.00,288.18" fill="#f0a35f" stroke="none"/>
+<polygon points="140.00,139.00 153.00,126.00 487.75,126.00 487.75,126.00 539.75,126.00 552.75,139.00 552.75,170.20 539.75,178.00 487.75,178.00 487.75,301.18 153.00,301.18 140.00,288.18" fill="url(#hatch)" stroke="#c9772f" stroke-width="1.6" stroke-linejoin="round"/>
+<polygon points="140.00,636.25 153.00,649.25 487.75,649.25 487.75,649.25 539.75,649.25 552.75,636.25 552.75,605.05 539.75,597.25 487.75,597.25 487.75,474.07 153.00,474.07 140.00,487.07" fill="#f0a35f" stroke="none"/>
+<polygon points="140.00,636.25 153.00,649.25 487.75,649.25 487.75,649.25 539.75,649.25 552.75,636.25 552.75,605.05 539.75,597.25 487.75,597.25 487.75,474.07 153.00,474.07 140.00,487.07" fill="url(#hatch)" stroke="#c9772f" stroke-width="1.6" stroke-linejoin="round"/>
+<line x1="124.40" y1="387.62" x2="591.75" y2="387.62" stroke="#7b818b" stroke-width="1" stroke-dasharray="14 4 3 4"/>
+<line x1="140.00" y1="655.25" x2="140.00" y2="715.25" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="552.75" y1="655.25" x2="552.75" y2="715.25" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="140.00" y1="707.25" x2="552.75" y2="707.25" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
+<text x="346.38" y="727.25" fill="#2f3237" font-size="15" text-anchor="middle" font-weight="400">31.75 overall (1-1/4 in)</text>
+<line x1="487.75" y1="120.00" x2="487.75" y2="84.00" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="552.75" y1="120.00" x2="552.75" y2="84.00" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="487.75" y1="92.00" x2="552.75" y2="92.00" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
+<text x="520.25" y="80.00" fill="#2f3237" font-size="15" text-anchor="middle" font-weight="400">cap pocket ⌀32.25 × 5.0 deep</text>
+<line x1="548.75" y1="126.00" x2="634.75" y2="126.00" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="548.75" y1="649.25" x2="634.75" y2="649.25" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="626.75" y1="126.00" x2="626.75" y2="649.25" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
+<text x="636.75" y="392.62" fill="#2f3237" font-size="15" text-anchor="start" font-weight="400">⌀40.2</text>
+<line x1="144.00" y1="301.18" x2="62.00" y2="301.18" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="144.00" y1="474.07" x2="62.00" y2="474.07" stroke="#7b818b" stroke-width="0.8"/>
+<line x1="70.00" y1="301.18" x2="70.00" y2="474.07" stroke="#2f3237" stroke-width="1.1" marker-start="url(#al)" marker-end="url(#ar)"/>
+<text x="60.00" y="392.62" fill="#2f3237" font-size="15" text-anchor="end" font-weight="400">⌀13.3</text>
+<path d="M192.00,353.82 L264.80,353.82 L487.75,239.59" fill="none" stroke="#2f3237" stroke-width="1.1" marker-end="url(#ar)"/>
+<text x="192.00" y="345.82" fill="#2f3237" font-size="15" text-anchor="start" font-weight="400">the lip — 9.5 wide</text>
+<text x="148.00" y="679.25" fill="#7b818b" font-size="14" text-anchor="start" font-weight="400">foot — on the post</text>
+<text x="544.75" y="679.25" fill="#7b818b" font-size="14" text-anchor="end" font-weight="400">rubber cap end</text>
 <text x="140.00" y="34.00" fill="#2f3237" font-size="19" text-anchor="start" font-weight="600">Rubber cap / post spacer — section</text>
 <text x="140.00" y="58.00" fill="#7b818b" font-size="14" text-anchor="start" font-weight="400">all dimensions mm · wall 4.0 · bore for a 12.7 mm rod</text>
 </svg>

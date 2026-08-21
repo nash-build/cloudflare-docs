@@ -1,24 +1,29 @@
-# Gate fastener extension
+# Rubber cap / post spacer
 
-A 3D printable standoff that pushes the rubber cap on a gate stop further out to
-close a gap, without replacing the white metal fastener.
+The rod carrying the black rubber cap is too short to reach the wood post, so
+the cap hangs in mid air. This is a 3D printable sleeve that goes on that rod
+and fills the empty space: a flat foot lands on the post, and a pocket at the
+other end swallows the rubber cap.
 
-The bolt passes through a clearance bore. The outer end is counterbored larger
-than that bore, and the shoulder left between the two is the **lip** — that is
-what the bolt head bears on as you tighten it down against the white fastener.
-Tightening clamps the standoff flat to the fastener and moves the head, and
-whatever is on it, outward by the full length of the part.
+The rod passes straight through a clearance bore. The pocket is counterbored
+larger than that bore, and the shoulder left between the two is the **lip** —
+what the cap, and the bolt head behind it, catch on as the rod is tightened.
 
 ```
-   gate side
-     ┌───────────────┐
-     │   ▓▓ pocket ▓▓│   hex head / nut / rubber cap seats here
-     ├──┐         ┌──┤ ← the lip
-     │  │  bore   │  │   bolt shank passes straight through
-     │  │         │  │
-     └──┴─────────┴──┘
-   ═══════════════════   flat against the white gate fastener
+   wood post                                    white gate fastener
+       │                                                │
+       │  ┌────────────────┐                            │
+       │  │                │  ▓▓▓▓▓▓                    │
+       │  │  ┌──────────┐  │  ▓ cap ▓                   │
+       ├──┤  │   bore   │  ├──▓▓▓▓▓▓──────[ rod ]───────┤──[nut]
+       │  │  └──────────┘  │  ▓▓▓▓▓▓                    │
+       │  │                │  ▓▓▓▓▓▓                    │
+       │  └────────────────┘                            │
+       │   ↑ foot          ↑ lip / pocket
 ```
+
+The whole stack, in order: **post → printed spacer → rubber cap → white gate
+fastener → nut.**
 
 ## What it looks like
 
@@ -31,66 +36,56 @@ python3 render.py            # part_iso, part_section, assembly_exploded (PNG)
 python3 section_drawing.py   # section_drawing.svg, dimensioned
 ```
 
-- `part_iso.png` — the printed part, pocket facing up, in its print orientation.
-- `part_section.png` — cut through the axis: hex pocket, the lip, the bore.
-- `assembly_exploded.png` — post, white fastener, standoff, nut, rubber cap.
-  The orange part is the one you print; everything grey is existing hardware.
-- `section_drawing.svg` — the same section with dimensions on it.
+- `part_iso.png` — the printed part, pocket up, in its print orientation.
+- `part_section.png` — cut through the axis: cap pocket, the lip, the bore.
+- `assembly_exploded.png` — the stack above, exploded along the rod. The orange
+  part is the one you print; everything grey is hardware you already have.
+- `section_drawing.svg` — the same section, dimensioned.
 
-## Measure these three things first
+## Measure these two things first
 
-The defaults are a guess at your hardware. Two of them are worth checking with
-calipers before you spend an hour of print time:
+Everything else is safe to leave alone. These two decide whether the print is
+usable, and the defaults are a guess from the photos:
 
-| What | Default | Notes |
+| What | Default | How to measure |
 |---|---|---|
-| **The gap** you need to close | `--length 25` | Set this to the gap. The part extends reach by exactly its own length. Add 2–3 mm if you want the rubber to squash slightly when the gate closes. |
-| **Bolt diameter** | `--bolt-diameter 12.7` (1/2") | Measure the threaded rod itself, not the hole. In the photos it could plausibly be 3/8" (9.525) or 5/16" (7.94) — a 1/2" bore on a 3/8" rod will rattle. |
-| **Head or nut size across the flats** | `--pocket-size 19.05` (3/4") | Standard for a 1/2" bolt. Measure flat-to-flat with the jaws, not corner-to-corner. |
+| **The empty space** between the face of the rubber cap and the post | `--length 22` | Hold a ruler in the gap with the rod pushed home. Set `--length` to that gap **plus** the pocket depth (5 mm), since the cap sinks into the pocket. |
+| **The rubber cap's diameter** | `--pocket-size 25.4` (1") | Calipers across the widest part of the black cap. Too small and it will not seat; too big and it rattles. |
 
-## Printing the ready-made STLs
+Worth a quick check too: the rod is assumed to be **1/2" (12.7 mm)**. Measure
+the rod itself, not the hole it sits in — in the photos it could plausibly be
+3/8" (9.53) or 5/16" (7.94), and a 1/2" bore on a 3/8" rod will rattle. Change
+it with `--bolt-diameter`.
 
-`stl/` has five variants, all with a 13.3 mm bore for a 1/2" bolt:
+## Ready-made STLs
 
-- `extension_15mm_hex.stl`, `extension_25mm_hex.stl`, `extension_35mm_hex.stl` —
-  hex pocket, 19.55 mm across the flats, 9 mm deep. The hex also stops a nut
-  from spinning while you tighten from the other side.
-- `extension_25mm_round.stl` — 22.9 mm round pocket, for a head plus a washer.
-- `extension_25mm_rubbercap.stl` — 25.4 mm round pocket, 5 mm deep, sized to
-  cradle the black rubber cap itself so the lip retains it.
+`stl/` covers a range of gaps, all with a 13.3 mm bore for a 1/2" rod and a
+25.9 mm × 5 mm pocket for a 1" rubber cap:
 
-Print settings that matter, given this part takes a gate swinging into it:
+`spacer_10mm_cap` · `spacer_14mm_cap` · `spacer_18mm_cap` · `spacer_22mm_cap` ·
+`spacer_26mm_cap` · `spacer_30mm_cap` · `spacer_35mm_cap`
 
-- **Orientation:** flat face on the bed, pocket facing up. Layers then run
-  across the bolt axis, so the impact load compresses the layers instead of
-  peeling them apart. No supports needed in this orientation.
-- **Walls:** 4–5 perimeters. Perimeters carry far more of this load than infill.
-- **Infill:** 40–50%, gyroid or cubic.
-- **Material:** PETG or ASA outdoors. PLA will creep under a tightened bolt and
-  goes brittle in UV within a season or two.
+The number is the part's overall length, so pick `gap + 5`. There is also
+`spacer_22mm_hexnut.stl`, which swaps the round pocket for a 19.55 mm hex one
+if you would rather trap a nut than the rubber cap.
 
-Roughly 15 cm³ of plastic for the 25 mm version — about 20 g, under two hours.
-
-## Changing the dimensions
-
-Either tool produces the same part. Python needs no dependencies:
+## Rolling your own size
 
 ```
-python3 gate_fastener_extension.py --length 32 --bolt-diameter 9.525 \
-        --pocket-size 14.29 -o my_extension.stl
+python3 gate_fastener_extension.py --length 27 --pocket-size 24.5 -o mine.stl
+python3 gate_fastener_extension.py --help      # every parameter
 ```
 
-`--help` lists every parameter. `gate_fastener_extension.scad` is the same part
-for OpenSCAD, with the parameters grouped for the customizer.
+## Printing
 
-The outer diameter is derived rather than set: it is the pocket's circumscribed
-radius plus `--wall` (5 mm by default), so it grows automatically if you enlarge
-the pocket. The generator refuses to build a part where the pocket is not larger
-than the bore, since that would leave no lip at all.
-
-## One alternative worth knowing
-
-If the gap is more than about 40 mm, a longer bolt is stronger, cheaper and
-faster than printing a standoff this tall — a plastic column that long starts
-acting as a lever on the fastener's mounting screws every time the gate hits it.
-Under about 40 mm the printed standoff is fine.
+- **Orientation:** foot down on the bed, pocket up. That puts the layer lines
+  across the rod axis, so the clamping load is in compression rather than
+  pulling layers apart.
+- **Walls / infill:** 4 perimeters, 40% infill. This part is squeezed between a
+  nut and a wooden post, and 20% sparse infill will creep over time.
+- **Material:** PETG or ASA if it lives outdoors. PLA will soften in direct sun
+  and go brittle over a season or two.
+- **No supports needed** — the pocket is a flat-bottomed recess and the bore is
+  vertical.
+- Print the shortest variant first as a fit test before committing to the real
+  one; it is a few minutes and confirms the bore and pocket sizes.

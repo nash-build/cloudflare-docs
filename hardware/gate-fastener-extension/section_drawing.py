@@ -109,15 +109,17 @@ def build(length, scale=13.0, **kw):
     ext(X(0), Y(-ro) + 6, y_len + 8)
     ext(X(h), Y(-ro) + 6, y_len + 8)
     dim_line(X(0), y_len, X(h), y_len)
-    text((X(0) + X(h)) / 2, y_len + 20, f"{h:.1f} overall — set this to your gap")
+    text((X(0) + X(h)) / 2, y_len + 20, f"{h:.1f} overall \u2014 gap to the post + pocket depth")
 
     # Pocket, above the part. One label rather than two crossing dimensions.
     y_pd = Y(ro) - 34
     ext(X(h - pd), Y(ro) - 6, y_pd - 8)
     ext(X(h), Y(ro) - 6, y_pd - 8)
     dim_line(X(h - pd), y_pd, X(h), y_pd)
-    text((X(h - pd) + X(h)) / 2, y_pd - 12,
-         f"hex pocket {pa:.2f} A/F \u00d7 {pd:.1f} deep", anchor="middle")
+    pocket_label = (f"hex pocket {pa:.2f} A/F \u00d7 {pd:.1f} deep"
+                    if stats["pocket_kind"] == "hex"
+                    else f"cap pocket \u2300{pa:.2f} \u00d7 {pd:.1f} deep")
+    text((X(h - pd) + X(h)) / 2, y_pd - 12, pocket_label, anchor="middle")
 
     # Outer diameter, right.
     x_od = X(h) + 74
@@ -142,15 +144,15 @@ def build(length, scale=13.0, **kw):
          anchor="start")
 
     # Which way round it goes.
-    text(X(0) + 8, Y(-ro) + 30, "against the fastener", size=14,
+    text(X(0) + 8, Y(-ro) + 30, "foot \u2014 on the post", size=14,
          anchor="start", fill=THIN)
-    text(X(h) - 8, Y(-ro) + 30, "gate side", size=14, anchor="end", fill=THIN)
+    text(X(h) - 8, Y(-ro) + 30, "rubber cap end", size=14, anchor="end", fill=THIN)
 
-    text(left, 34, "Gate fastener extension \u2014 section", size=19,
+    text(left, 34, "Rubber cap / post spacer \u2014 section", size=19,
          anchor="start", weight="600")
     text(left, 58,
          f"all dimensions mm \u00b7 wall {stats['wall']:.1f} \u00b7 "
-         f"bore for a {stats['bore_diameter'] - 0.6:.1f} mm bolt",
+         f"bore for a {stats['bore_diameter'] - 0.6:.1f} mm rod",
          size=14, anchor="start", fill=THIN)
 
     a('</svg>')

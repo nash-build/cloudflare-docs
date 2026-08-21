@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-Parametric bolt-through standoff ("extension") for a gate fastener / gate stop.
+Parametric bolt-through spacer that fills the empty space between the black
+rubber cap and the wood post.
 
-The part is a stepped sleeve that sandwiches between the white metal gate
-fastener and whatever sits on the outer end of the bolt (hex head, nut, or the
-black rubber cap). The bolt passes straight through a clearance bore; the outer
-end is counterbored larger than the bore, and the shoulder left between the two
-is the "lip" that the bolt head bears on when it is tightened down against the
-gate fastener.
+The rod carrying the rubber cap is too short to reach the post, so the cap hangs
+in mid air. This part is a stepped sleeve that goes on that rod and bridges the
+gap: a flat foot bears on the wood, and a pocket at the other end swallows the
+rubber cap. The rod passes straight through a clearance bore. The pocket is
+counterbored larger than the bore, and the shoulder left between the two is the
+"lip" -- that is what the cap (or the bolt head behind it) catches on as the rod
+is tightened up.
 
-    outer end (gate side)
-      |  [ pocket: hex nut / bolt head / rubber cap ]
+    cap end
+      |  [ pocket: the black rubber cap seats in here ]
       |  ------------------- <- the lip (shoulder)
-      |  [ bore: bolt shank clearance ]
+      |  [ bore: rod passes straight through ]
       |
-    bracket end (flat against the white gate fastener)
+    foot (flat against the wood post)
 
 Everything below is in millimetres. Inch values are converted inline so the
 numbers stay readable.
@@ -163,11 +165,11 @@ def part_levels(
     length,
     bolt_diameter=0.5 * INCH,
     bolt_clearance=0.6,
-    pocket_kind="hex",
-    pocket_size=0.75 * INCH,
+    pocket_kind="round",
+    pocket_size=1.0 * INCH,
     pocket_clearance=0.5,
-    pocket_depth=9.0,
-    wall=5.0,
+    pocket_depth=5.0,
+    wall=4.0,
     chamfer=1.0,
     segments=180,
 ):
@@ -204,7 +206,7 @@ def part_levels(
 
     levels = [
         # z,          outer profile,        inner profile
-        (0.0, offset(outer, -c), offset(bore, c)),  # bracket face, chamfered
+        (0.0, offset(outer, -c), offset(bore, c)),  # foot, chamfered
         (c, outer, bore),
         (h - pd, outer, bore),
         (h - pd, outer, pocket),  # step -> the lip
@@ -214,6 +216,7 @@ def part_levels(
 
     stats = {
         "length": h,
+        "pocket_kind": pocket_kind,
         "outer_diameter": outer_d,
         "bore_diameter": bolt_diameter + bolt_clearance,
         "pocket_across": pocket_size + pocket_clearance,
@@ -240,14 +243,15 @@ def main():
         "--length",
         type=float,
         default=25.0,
-        help="Total length of the standoff in mm. This is how much further out "
-        "the bolt head / rubber cap ends up, so set it to your measured gap.",
+        help="Total length in mm. Set it to the empty space between the face "
+        "of the rubber cap and the wood post, plus the pocket depth.",
     )
     p.add_argument(
         "--bolt-diameter",
         type=float,
         default=0.5 * INCH,
-        help="Nominal bolt diameter in mm (1/2 inch = 12.7).",
+        help="Nominal rod diameter in mm (1/2 inch = 12.7). Measure the rod "
+        "itself, not the hole it sits in.",
     )
     p.add_argument(
         "--bolt-clearance",
@@ -258,33 +262,34 @@ def main():
     p.add_argument(
         "--pocket",
         choices=["hex", "round"],
-        default="hex",
-        help="Shape of the counterbore. 'hex' also stops a nut spinning.",
+        default="round",
+        help="Shape of the pocket. 'round' cradles the rubber cap; 'hex' "
+        "captures a nut instead and stops it spinning.",
     )
     p.add_argument(
         "--pocket-size",
         type=float,
-        default=0.75 * INCH,
-        help="Across the flats for a hex pocket, diameter for a round one "
-        "(3/4 inch = 19.05, the standard head size on a 1/2 inch bolt).",
+        default=1.0 * INCH,
+        help="Diameter of the round pocket, or across the flats for a hex one. "
+        "For a round pocket this is the rubber cap's diameter -- MEASURE IT.",
     )
     p.add_argument("--pocket-clearance", type=float, default=0.5)
     p.add_argument(
         "--pocket-depth",
         type=float,
-        default=9.0,
-        help="How deep the pocket is. Everything below it is the bore, and the "
-        "shoulder between the two is the lip.",
+        default=5.0,
+        help="How far the rubber cap sinks into the pocket. Everything below "
+        "it is the bore, and the shoulder between the two is the lip.",
     )
     p.add_argument(
         "--wall",
         type=float,
-        default=5.0,
+        default=4.0,
         help="Material left around the pocket, which sets the outer diameter.",
     )
     p.add_argument("--chamfer", type=float, default=1.0)
     p.add_argument("--segments", type=int, default=180)
-    p.add_argument("-o", "--output", default="gate_fastener_extension.stl")
+    p.add_argument("-o", "--output", default="gate_post_spacer.stl")
     args = p.parse_args()
 
     tris, stats = make_part(
@@ -305,7 +310,7 @@ def main():
     print(f"  length            {args.length:.2f} mm")
     print(f"  outer diameter    {stats['outer_diameter']:.2f} mm")
     print(f"  through bore      {stats['bore_diameter']:.2f} mm")
-    print(f"  {args.pocket} pocket       {stats['pocket_across']:.2f} mm x "
+    print(f"  {args.pocket} pocket     {stats['pocket_across']:.2f} mm x "
           f"{args.pocket_depth:.2f} mm deep")
     print(f"  lip width         {stats['lip_width']:.2f} mm (radial)")
     print(f"  triangles         {stats['triangles']}")
